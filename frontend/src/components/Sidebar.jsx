@@ -1,6 +1,17 @@
-import { NavLink } from "react-router-dom";
+import { NavLink, useNavigate } from "react-router-dom";
 
 function Sidebar() {
+    const navigate = useNavigate();
+
+    const handleLogout = () => {
+        // Remove JWT tokens
+        localStorage.removeItem("access_token");
+        localStorage.removeItem("refresh_token");
+
+        // Redirect to login page
+        navigate("/login");
+    };
+
     return (
         <aside className="sidebar">
 
@@ -65,10 +76,7 @@ function Sidebar() {
                 <button
                     type="button"
                     className="logout-button"
-                    onClick={() => {
-                        // Keep your existing logout logic here
-                        console.log("Logout");
-                    }}
+                    onClick={handleLogout}
                 >
                     <span className="sidebar-icon">↪</span>
                     <span>Logout</span>

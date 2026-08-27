@@ -1,6 +1,8 @@
 import { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
 
+import { apiFetch } from "../services/api";
+
 function Dashboard() {
     const [members, setMembers] = useState([]);
     const [deposits, setDeposits] = useState([]);
@@ -15,8 +17,8 @@ function Dashboard() {
 
                 const [membersResponse, depositsResponse] =
                     await Promise.all([
-                        fetch("http://127.0.0.1:8000/api/members/"),
-                        fetch("http://127.0.0.1:8000/api/deposits/"),
+                        apiFetch("/members/"),
+                        apiFetch("/deposits/"),
                     ]);
 
                 if (!membersResponse.ok) {
@@ -61,21 +63,25 @@ function Dashboard() {
     ).length;
 
     const totalAmount = deposits.reduce(
-        (total, deposit) => total + Number(deposit.amount || 0),
+        (total, deposit) =>
+            total + Number(deposit.amount || 0),
         0
     );
 
     const totalFine = deposits.reduce(
-        (total, deposit) => total + Number(deposit.fine || 0),
+        (total, deposit) =>
+            total + Number(deposit.fine || 0),
         0
     );
 
     const totalExtra = deposits.reduce(
-        (total, deposit) => total + Number(deposit.extra || 0),
+        (total, deposit) =>
+            total + Number(deposit.extra || 0),
         0
     );
 
-    const grandTotal = totalAmount + totalFine + totalExtra;
+    const grandTotal =
+        totalAmount + totalFine + totalExtra;
 
     if (loading) {
         return (
@@ -96,7 +102,9 @@ function Dashboard() {
                 <div className="page-header">
                     <div>
                         <h1>Dashboard</h1>
-                        <p className="error-message">{error}</p>
+                        <p className="error-message">
+                            {error}
+                        </p>
                     </div>
                 </div>
             </div>
@@ -110,7 +118,9 @@ function Dashboard() {
             <div className="page-header">
                 <div>
                     <h1>Dashboard</h1>
-                    <p>Society Management System overview</p>
+                    <p>
+                        Society Management System overview
+                    </p>
                 </div>
             </div>
 
@@ -119,9 +129,11 @@ function Dashboard() {
 
                 <div className="dashboard-card">
                     <h3>Total Members</h3>
+
                     <div className="dashboard-number">
                         {members.length}
                     </div>
+
                     <Link to="/members">
                         View Members →
                     </Link>
@@ -129,25 +141,31 @@ function Dashboard() {
 
                 <div className="dashboard-card">
                     <h3>Active Members</h3>
+
                     <div className="dashboard-number">
                         {activeMembers}
                     </div>
+
                     <span>Currently active</span>
                 </div>
 
                 <div className="dashboard-card">
                     <h3>Inactive Members</h3>
+
                     <div className="dashboard-number">
                         {inactiveMembers}
                     </div>
+
                     <span>Currently inactive</span>
                 </div>
 
                 <div className="dashboard-card">
                     <h3>Total Deposits</h3>
+
                     <div className="dashboard-number">
                         {deposits.length}
                     </div>
+
                     <Link to="/deposits">
                         View Deposits →
                     </Link>
@@ -155,33 +173,41 @@ function Dashboard() {
 
                 <div className="dashboard-card">
                     <h3>Total Amount</h3>
+
                     <div className="dashboard-number">
                         {totalAmount.toFixed(2)}
                     </div>
+
                     <span>Deposit amount</span>
                 </div>
 
                 <div className="dashboard-card">
                     <h3>Total Fine</h3>
+
                     <div className="dashboard-number">
                         {totalFine.toFixed(2)}
                     </div>
+
                     <span>Collected fines</span>
                 </div>
 
                 <div className="dashboard-card">
                     <h3>Total Extra</h3>
+
                     <div className="dashboard-number">
                         {totalExtra.toFixed(2)}
                     </div>
+
                     <span>Extra payments</span>
                 </div>
 
                 <div className="dashboard-card">
                     <h3>Grand Total</h3>
+
                     <div className="dashboard-number">
                         {grandTotal.toFixed(2)}
                     </div>
+
                     <span>Total collected</span>
                 </div>
 
@@ -189,7 +215,6 @@ function Dashboard() {
 
             {/* Quick Actions */}
             <div className="dashboard-section">
-
                 <h2>Quick Actions</h2>
 
                 <div className="quick-actions">
@@ -209,30 +234,24 @@ function Dashboard() {
                     </Link>
 
                 </div>
-
             </div>
 
             {/* Recent Deposits */}
             <div className="dashboard-section">
 
                 <div className="section-header">
-
                     <h2>Recent Deposits</h2>
 
                     <Link to="/deposits">
                         View All
                     </Link>
-
                 </div>
 
                 {deposits.length === 0 ? (
-
                     <p className="empty-state">
                         No deposits found.
                     </p>
-
                 ) : (
-
                     <div className="table-wrapper">
 
                         <table className="dashboard-table">
@@ -250,55 +269,52 @@ function Dashboard() {
                             </thead>
 
                             <tbody>
+                                {deposits
+                                    .slice(0, 5)
+                                    .map((deposit) => (
+                                        <tr key={deposit.id}>
 
-                                {deposits.slice(0, 5).map((deposit) => (
+                                            <td>
+                                                {deposit.member_name || "-"}
+                                            </td>
 
-                                    <tr key={deposit.id}>
+                                            <td>
+                                                {deposit.year}
+                                            </td>
 
-                                        <td>
-                                            {deposit.member_name || "-"}
-                                        </td>
+                                            <td>
+                                                {deposit.month}
+                                            </td>
 
-                                        <td>
-                                            {deposit.year}
-                                        </td>
+                                            <td>
+                                                {Number(
+                                                    deposit.amount || 0
+                                                ).toFixed(2)}
+                                            </td>
 
-                                        <td>
-                                            {deposit.month}
-                                        </td>
+                                            <td>
+                                                {Number(
+                                                    deposit.fine || 0
+                                                ).toFixed(2)}
+                                            </td>
 
-                                        <td>
-                                            {Number(
-                                                deposit.amount || 0
-                                            ).toFixed(2)}
-                                        </td>
+                                            <td>
+                                                {Number(
+                                                    deposit.extra || 0
+                                                ).toFixed(2)}
+                                            </td>
 
-                                        <td>
-                                            {Number(
-                                                deposit.fine || 0
-                                            ).toFixed(2)}
-                                        </td>
+                                            <td>
+                                                {deposit.payment_date || "-"}
+                                            </td>
 
-                                        <td>
-                                            {Number(
-                                                deposit.extra || 0
-                                            ).toFixed(2)}
-                                        </td>
-
-                                        <td>
-                                            {deposit.payment_date || "-"}
-                                        </td>
-
-                                    </tr>
-
-                                ))}
-
+                                        </tr>
+                                    ))}
                             </tbody>
 
                         </table>
 
                     </div>
-
                 )}
 
             </div>

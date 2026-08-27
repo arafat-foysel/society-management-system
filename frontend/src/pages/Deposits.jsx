@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
 
-const API_URL = "http://127.0.0.1:8000/api";
+import { apiFetch } from "../services/api";
 
 const MONTHS = [
     "January",
@@ -65,7 +65,6 @@ function Deposits() {
 
     const [editingId, setEditingId] = useState(null);
 
-    // Form is CLOSED when page first opens
     const [showForm, setShowForm] = useState(false);
 
     const [formData, setFormData] = useState(getEmptyForm());
@@ -76,7 +75,7 @@ function Deposits() {
 
     const loadMembers = async () => {
         try {
-            const response = await fetch(`${API_URL}/members/`);
+            const response = await apiFetch("/members/");
 
             if (!response.ok) {
                 throw new Error("Failed to load members.");
@@ -102,7 +101,7 @@ function Deposits() {
 
     const loadDeposits = async () => {
         try {
-            const response = await fetch(`${API_URL}/deposits/`);
+            const response = await apiFetch("/deposits/");
 
             if (!response.ok) {
                 throw new Error("Failed to load deposits.");
@@ -236,25 +235,29 @@ function Deposits() {
 
             let response;
 
+            // =================================================
+            // UPDATE EXISTING DEPOSIT
+            // =================================================
+
             if (editingId) {
-                response = await fetch(
-                    `${API_URL}/deposits/${editingId}/`,
+                response = await apiFetch(
+                    `/deposits/${editingId}/`,
                     {
                         method: "PUT",
-                        headers: {
-                            "Content-Type": "application/json",
-                        },
                         body: JSON.stringify(payload),
                     }
                 );
-            } else {
-                response = await fetch(
-                    `${API_URL}/deposits/`,
+            }
+
+            // =================================================
+            // CREATE NEW DEPOSIT
+            // =================================================
+
+            else {
+                response = await apiFetch(
+                    "/deposits/",
                     {
                         method: "POST",
-                        headers: {
-                            "Content-Type": "application/json",
-                        },
                         body: JSON.stringify(payload),
                     }
                 );
@@ -278,10 +281,13 @@ function Deposits() {
             );
 
             setFormData(getEmptyForm());
+
             setEditingId(null);
+
             setShowForm(false);
 
             await loadDeposits();
+
         } catch (err) {
             console.error("Error saving deposit:", err);
 
@@ -348,15 +354,21 @@ function Deposits() {
             setError("");
             setMessage("");
 
-            const response = await fetch(
-                `${API_URL}/deposits/${id}/`,
+            const response = await apiFetch(
+                `/deposits/${id}/`,
                 {
                     method: "DELETE",
                 }
             );
 
             if (!response.ok) {
-                const data = await response.json();
+                let data = {};
+
+                try {
+                    data = await response.json();
+                } catch {
+                    data = {};
+                }
 
                 throw new Error(
                     data.detail ||
@@ -369,6 +381,7 @@ function Deposits() {
             );
 
             await loadDeposits();
+
         } catch (err) {
             console.error(
                 "Error deleting deposit:",
@@ -440,6 +453,7 @@ function Deposits() {
                 <div className="page-header">
                     <div>
                         <h1>Deposits</h1>
+
                         <p>
                             Manage member deposits and
                             payments.
@@ -465,9 +479,7 @@ function Deposits() {
     return (
         <div className="page deposits-page">
 
-            {/* =================================================
-                PAGE HEADER
-            ================================================= */}
+            {/* PAGE HEADER */}
 
             <div className="page-header">
 
@@ -493,9 +505,7 @@ function Deposits() {
             </div>
 
 
-            {/* =================================================
-                MESSAGES
-            ================================================= */}
+            {/* MESSAGES */}
 
             {message && (
                 <div className="success-message">
@@ -510,14 +520,15 @@ function Deposits() {
             )}
 
 
-            {/* =================================================
-                SUMMARY CARDS
-            ================================================= */}
+            {/* SUMMARY CARDS */}
 
             <div className="deposit-summary-grid">
 
                 <div className="deposit-summary-card">
-                    <span>Total Deposits</span>
+
+                    <span>
+                        Total Deposits
+                    </span>
 
                     <strong>
                         {deposits.length}
@@ -526,11 +537,15 @@ function Deposits() {
                     <small>
                         Payment records
                     </small>
+
                 </div>
 
 
                 <div className="deposit-summary-card">
-                    <span>Total Amount</span>
+
+                    <span>
+                        Total Amount
+                    </span>
 
                     <strong>
                         {totalAmount.toFixed(2)}
@@ -539,11 +554,15 @@ function Deposits() {
                     <small>
                         Deposit amount
                     </small>
+
                 </div>
 
 
                 <div className="deposit-summary-card">
-                    <span>Total Fine</span>
+
+                    <span>
+                        Total Fine
+                    </span>
 
                     <strong>
                         {totalFine.toFixed(2)}
@@ -552,11 +571,15 @@ function Deposits() {
                     <small>
                         Collected fines
                     </small>
+
                 </div>
 
 
                 <div className="deposit-summary-card">
-                    <span>Grand Total</span>
+
+                    <span>
+                        Grand Total
+                    </span>
 
                     <strong>
                         {grandTotal.toFixed(2)}
@@ -565,14 +588,13 @@ function Deposits() {
                     <small>
                         Total collected
                     </small>
+
                 </div>
 
             </div>
 
 
-            {/* =================================================
-                ADD / EDIT FORM
-            ================================================= */}
+            {/* ADD / EDIT FORM */}
 
             {showForm && (
                 <div className="content-card">
@@ -580,6 +602,7 @@ function Deposits() {
                     <div className="card-header">
 
                         <div>
+
                             <h2>
                                 {editingId
                                     ? "Edit Deposit"
@@ -591,6 +614,7 @@ function Deposits() {
                                     ? "Update the payment record."
                                     : "Enter the payment information below."}
                             </p>
+
                         </div>
 
                         <button
@@ -634,12 +658,8 @@ function Deposits() {
                                                 key={member.id}
                                                 value={member.id}
                                             >
-                                                {
-                                                    member.first_name
-                                                }{" "}
-                                                {
-                                                    member.last_name
-                                                }
+                                                {member.first_name}{" "}
+                                                {member.last_name}
                                             </option>
                                         )
                                     )}
@@ -850,15 +870,14 @@ function Deposits() {
             )}
 
 
-            {/* =================================================
-                DEPOSIT LIST
-            ================================================= */}
+            {/* DEPOSIT LIST */}
 
             <div className="content-card">
 
                 <div className="card-header">
 
                     <div>
+
                         <h2>
                             Deposit List
                         </h2>
@@ -870,6 +889,7 @@ function Deposits() {
                                 ? "s"
                                 : ""}
                         </p>
+
                     </div>
 
                 </div>
@@ -901,45 +921,25 @@ function Deposits() {
 
                                 <tr>
 
-                                    <th>
-                                        ID
-                                    </th>
+                                    <th>ID</th>
 
-                                    <th>
-                                        Member
-                                    </th>
+                                    <th>Member</th>
 
-                                    <th>
-                                        Year
-                                    </th>
+                                    <th>Year</th>
 
-                                    <th>
-                                        Month
-                                    </th>
+                                    <th>Month</th>
 
-                                    <th>
-                                        Amount
-                                    </th>
+                                    <th>Amount</th>
 
-                                    <th>
-                                        Fine
-                                    </th>
+                                    <th>Fine</th>
 
-                                    <th>
-                                        Extra
-                                    </th>
+                                    <th>Extra</th>
 
-                                    <th>
-                                        Total
-                                    </th>
+                                    <th>Total</th>
 
-                                    <th>
-                                        Payment Date
-                                    </th>
+                                    <th>Payment Date</th>
 
-                                    <th>
-                                        Actions
-                                    </th>
+                                    <th>Actions</th>
 
                                 </tr>
 
@@ -953,16 +953,13 @@ function Deposits() {
 
                                         const total =
                                             Number(
-                                                deposit.amount ||
-                                                0
+                                                deposit.amount || 0
                                             ) +
                                             Number(
-                                                deposit.fine ||
-                                                0
+                                                deposit.fine || 0
                                             ) +
                                             Number(
-                                                deposit.extra ||
-                                                0
+                                                deposit.extra || 0
                                             );
 
                                         return (
@@ -980,13 +977,17 @@ function Deposits() {
 
 
                                                 <td>
+
                                                     <div className="member-name">
+
                                                         {
                                                             getMemberName(
                                                                 deposit
                                                             )
                                                         }
+
                                                     </div>
+
                                                 </td>
 
 
@@ -998,13 +999,17 @@ function Deposits() {
 
 
                                                 <td>
+
                                                     <span className="role-badge">
+
                                                         {
                                                             normalizeMonth(
                                                                 deposit.month
                                                             )
                                                         }
+
                                                     </span>
+
                                                 </td>
 
 
@@ -1033,11 +1038,13 @@ function Deposits() {
 
 
                                                 <td>
+
                                                     <strong>
                                                         {total.toFixed(
                                                             2
                                                         )}
                                                     </strong>
+
                                                 </td>
 
 

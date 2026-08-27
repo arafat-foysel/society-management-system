@@ -1,6 +1,5 @@
 import { useEffect, useMemo, useState } from "react";
-
-const API_URL = "http://127.0.0.1:8000/api/members/";
+import { apiFetch } from "../services/api";
 
 const ROLE_OPTIONS = [
     "President",
@@ -61,22 +60,35 @@ function Members() {
             setLoading(true);
             setError("");
 
-            const response = await fetch(API_URL);
+            const response = await apiFetch("/members/");
 
-            if (!response.ok) {
-                throw new Error("Failed to load members.");
-            }
+            console.log("Members API status:", response.status);
 
             const data = await response.json();
+
+            console.log("Members API response:", data);
+
+            if (!response.ok) {
+                throw new Error(
+                    data.detail ||
+                    JSON.stringify(data) ||
+                    "Failed to load members."
+                );
+            }
 
             setMembers(
                 Array.isArray(data)
                     ? data
                     : data.results || []
             );
+
         } catch (err) {
             console.error("Error loading members:", err);
-            setError("Failed to load members.");
+
+            setError(
+                err.message || "Failed to load members."
+            );
+
         } finally {
             setLoading(false);
         }
@@ -150,17 +162,14 @@ function Members() {
             setError("");
             setSuccess("");
 
-            const url = editingMember
-                ? `${API_URL}${editingMember.id}/`
-                : API_URL;
+            const endpoint = editingMember
+                ? `/members/${editingMember.id}/`
+                : "/members/";
 
             const method = editingMember ? "PUT" : "POST";
 
-            const response = await fetch(url, {
+            const response = await apiFetch(endpoint, {
                 method,
-                headers: {
-                    "Content-Type": "application/json",
-                },
                 body: JSON.stringify(formData),
             });
 
@@ -228,8 +237,8 @@ function Members() {
             setError("");
             setSuccess("");
 
-            const response = await fetch(
-                `${API_URL}${id}/`,
+            const response = await apiFetch(
+                `/members/${id}/`,
                 {
                     method: "DELETE",
                 }

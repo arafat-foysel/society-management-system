@@ -9,28 +9,56 @@ import Deposits from "../pages/Deposits";
 import NotFound from "../pages/NotFound";
 
 import MainLayout from "../layouts/MainLayout";
+import ProtectedRoute from "./ProtectedRoute";
 
 function AppRouter() {
     return (
         <BrowserRouter>
             <MainLayout>
                 <Routes>
+
                     <Route path="/" element={<Home />} />
 
                     <Route path="/login" element={<Login />} />
 
-                    <Route path="/dashboard" element={<Dashboard />} />
+                    <Route
+                        path="/dashboard"
+                        element={
+                            <ProtectedRoute>
+                                <Dashboard />
+                            </ProtectedRoute>
+                        }
+                    />
 
-                    <Route path="/members" element={<Members />} />
+                    <Route
+                        path="/members"
+                        element={
+                            <ProtectedRoute>
+                                <Members />
+                            </ProtectedRoute>
+                        }
+                    />
 
                     <Route
                         path="/members/:id"
-                        element={<MemberDetails />}
+                        element={
+                            <ProtectedRoute>
+                                <MemberDetails />
+                            </ProtectedRoute>
+                        }
                     />
 
-                    <Route path="/deposits" element={<Deposits />} />
+                    <Route
+                        path="/deposits"
+                        element={
+                            <ProtectedRoute>
+                                <Deposits />
+                            </ProtectedRoute>
+                        }
+                    />
 
                     <Route path="*" element={<NotFound />} />
+
                 </Routes>
             </MainLayout>
         </BrowserRouter>
