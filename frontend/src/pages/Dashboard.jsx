@@ -1,6 +1,5 @@
 import { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
-
 import { apiFetch } from "../services/api";
 
 function Dashboard() {
@@ -127,94 +126,259 @@ function Dashboard() {
             {/* Summary Cards */}
             <div className="dashboard-grid">
 
-                <div className="dashboard-card">
-                    <h3>Total Members</h3>
-
-                    <div className="dashboard-number">
-                        {members.length}
+                {/* Total Members */}
+                <div className="dashboard-card dashboard-card-with-icon">
+                    <div className="dashboard-card-icon blue">
+                        <svg
+                            viewBox="0 0 24 24"
+                            fill="none"
+                            stroke="currentColor"
+                            strokeWidth="1.8"
+                            strokeLinecap="round"
+                            strokeLinejoin="round"
+                        >
+                            <path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2" />
+                            <circle cx="9" cy="7" r="4" />
+                            <path d="M22 21v-2a4 4 0 0 0-3-3.87" />
+                            <path d="M16 3.13a4 4 0 0 1 0 7.75" />
+                        </svg>
                     </div>
 
-                    <Link to="/members">
-                        View Members →
-                    </Link>
+                    <div className="dashboard-card-content">
+                        <h3>Total Members</h3>
+
+                        <div className="dashboard-number">
+                            {members.length}
+                        </div>
+
+                        <Link to="/members">
+                            View Members →
+                        </Link>
+                    </div>
                 </div>
 
-                <div className="dashboard-card">
-                    <h3>Active Members</h3>
-
-                    <div className="dashboard-number">
-                        {activeMembers}
+                {/* Active Members */}
+                <div className="dashboard-card dashboard-card-with-icon">
+                    <div className="dashboard-card-icon green">
+                        <svg
+                            viewBox="0 0 24 24"
+                            fill="none"
+                            stroke="currentColor"
+                            strokeWidth="1.8"
+                            strokeLinecap="round"
+                            strokeLinejoin="round"
+                        >
+                            <circle cx="12" cy="8" r="4" />
+                            <path d="M5 21v-1a7 7 0 0 1 14 0v1" />
+                            <path d="m16 11 2 2 4-4" />
+                        </svg>
                     </div>
 
-                    <span>Currently active</span>
+                    <div className="dashboard-card-content">
+                        <h3>Active Members</h3>
+
+                        <div className="dashboard-number">
+                            {activeMembers}
+                        </div>
+
+                        <span>Currently active</span>
+                    </div>
                 </div>
 
-                <div className="dashboard-card">
-                    <h3>Inactive Members</h3>
-
-                    <div className="dashboard-number">
-                        {inactiveMembers}
+                {/* Inactive Members */}
+                <div className="dashboard-card dashboard-card-with-icon">
+                    <div className="dashboard-card-icon orange">
+                        <svg
+                            viewBox="0 0 24 24"
+                            fill="none"
+                            stroke="currentColor"
+                            strokeWidth="1.8"
+                            strokeLinecap="round"
+                            strokeLinejoin="round"
+                        >
+                            <circle cx="12" cy="8" r="4" />
+                            <path d="M5 21v-1a7 7 0 0 1 14 0v1" />
+                            <path d="M12 13v4" />
+                            <path d="M12 20h.01" />
+                        </svg>
                     </div>
 
-                    <span>Currently inactive</span>
+                    <div className="dashboard-card-content">
+                        <h3>Inactive Members</h3>
+
+                        <div className="dashboard-number">
+                            {inactiveMembers}
+                        </div>
+
+                        <span>Currently inactive</span>
+                    </div>
                 </div>
 
-                <div className="dashboard-card">
-                    <h3>Total Deposits</h3>
-
-                    <div className="dashboard-number">
-                        {deposits.length}
+                {/* Total Deposits */}
+                <div className="dashboard-card dashboard-card-with-icon">
+                    <div className="dashboard-card-icon purple">
+                        <svg
+                            viewBox="0 0 24 24"
+                            fill="none"
+                            stroke="currentColor"
+                            strokeWidth="1.8"
+                            strokeLinecap="round"
+                            strokeLinejoin="round"
+                        >
+                            <rect
+                                x="4"
+                                y="3"
+                                width="16"
+                                height="18"
+                                rx="2"
+                            />
+                            <path d="M8 7h8" />
+                            <path d="M8 11h8" />
+                            <path d="M8 15h4" />
+                        </svg>
                     </div>
 
-                    <Link to="/deposits">
-                        View Deposits →
-                    </Link>
+                    <div className="dashboard-card-content">
+                        <h3>Total Deposits</h3>
+
+                        <div className="dashboard-number">
+                            {deposits.length}
+                        </div>
+
+                        <Link to="/deposits">
+                            View Deposits →
+                        </Link>
+                    </div>
                 </div>
 
-                <div className="dashboard-card">
-                    <h3>Total Amount</h3>
-
-                    <div className="dashboard-number">
-                        {totalAmount.toFixed(2)}
+                {/* Total Amount */}
+                <div className="dashboard-card dashboard-card-with-icon">
+                    <div className="dashboard-card-icon green">
+                        <svg
+                            viewBox="0 0 24 24"
+                            fill="none"
+                            stroke="currentColor"
+                            strokeWidth="1.8"
+                            strokeLinecap="round"
+                            strokeLinejoin="round"
+                        >
+                            <circle cx="12" cy="12" r="9" />
+                            <path d="M12 6v12" />
+                            <path d="M15 9.5c0-1-1.2-1.8-3-1.8s-3 .8-3 1.8 1.2 1.6 3 2.1 3 1 3 2.1-1.2 1.8-3 1.8-3-.8-3-1.8" />
+                        </svg>
                     </div>
 
-                    <span>Deposit amount</span>
+                    <div className="dashboard-card-content">
+                        <h3>Total Amount</h3>
+
+                        <div className="dashboard-number">
+                            {totalAmount.toFixed(2)}
+                        </div>
+
+                        <span>Deposit amount</span>
+                    </div>
                 </div>
 
-                <div className="dashboard-card">
-                    <h3>Total Fine</h3>
-
-                    <div className="dashboard-number">
-                        {totalFine.toFixed(2)}
+                {/* Total Fine */}
+                <div className="dashboard-card dashboard-card-with-icon">
+                    <div className="dashboard-card-icon orange">
+                        <svg
+                            viewBox="0 0 24 24"
+                            fill="none"
+                            stroke="currentColor"
+                            strokeWidth="1.8"
+                            strokeLinecap="round"
+                            strokeLinejoin="round"
+                        >
+                            <circle cx="12" cy="12" r="9" />
+                            <path d="M12 7v5" />
+                            <path d="M12 16h.01" />
+                        </svg>
                     </div>
 
-                    <span>Collected fines</span>
+                    <div className="dashboard-card-content">
+                        <h3>Total Fine</h3>
+
+                        <div className="dashboard-number">
+                            {totalFine.toFixed(2)}
+                        </div>
+
+                        <span>Collected fines</span>
+                    </div>
                 </div>
 
-                <div className="dashboard-card">
-                    <h3>Total Extra</h3>
-
-                    <div className="dashboard-number">
-                        {totalExtra.toFixed(2)}
+                {/* Total Extra */}
+                <div className="dashboard-card dashboard-card-with-icon">
+                    <div className="dashboard-card-icon blue">
+                        <svg
+                            viewBox="0 0 24 24"
+                            fill="none"
+                            stroke="currentColor"
+                            strokeWidth="1.8"
+                            strokeLinecap="round"
+                            strokeLinejoin="round"
+                        >
+                            <circle cx="12" cy="12" r="9" />
+                            <path d="M12 8v8" />
+                            <path d="M8 12h8" />
+                        </svg>
                     </div>
 
-                    <span>Extra payments</span>
+                    <div className="dashboard-card-content">
+                        <h3>Total Extra</h3>
+
+                        <div className="dashboard-number">
+                            {totalExtra.toFixed(2)}
+                        </div>
+
+                        <span>Extra payments</span>
+                    </div>
                 </div>
 
-                <div className="dashboard-card">
-                    <h3>Grand Total</h3>
-
-                    <div className="dashboard-number">
-                        {grandTotal.toFixed(2)}
+                {/* Grand Total */}
+                <div className="dashboard-card dashboard-card-with-icon">
+                    <div className="dashboard-card-icon purple">
+                        <svg
+                            viewBox="0 0 24 24"
+                            fill="none"
+                            stroke="currentColor"
+                            strokeWidth="1.8"
+                            strokeLinecap="round"
+                            strokeLinejoin="round"
+                        >
+                            <rect
+                                x="5"
+                                y="2"
+                                width="14"
+                                height="20"
+                                rx="2"
+                            />
+                            <path d="M8 6h8" />
+                            <path d="M8 10h2" />
+                            <path d="M14 10h2" />
+                            <path d="M8 14h2" />
+                            <path d="M14 14h2" />
+                            <path d="M8 18h2" />
+                            <path d="M14 18h2" />
+                        </svg>
                     </div>
 
-                    <span>Total collected</span>
+                    <div className="dashboard-card-content">
+                        <h3>Grand Total</h3>
+
+                        <div className="dashboard-number">
+                            {grandTotal.toFixed(2)}
+                        </div>
+
+                        <span>Total collected</span>
+                    </div>
                 </div>
 
             </div>
 
             {/* Quick Actions */}
             <div className="dashboard-section">
+
                 <h2>Quick Actions</h2>
 
                 <div className="quick-actions">
@@ -234,29 +398,36 @@ function Dashboard() {
                     </Link>
 
                 </div>
+
             </div>
 
             {/* Recent Deposits */}
             <div className="dashboard-section">
 
                 <div className="section-header">
+
                     <h2>Recent Deposits</h2>
 
                     <Link to="/deposits">
                         View All
                     </Link>
+
                 </div>
 
                 {deposits.length === 0 ? (
+
                     <p className="empty-state">
                         No deposits found.
                     </p>
+
                 ) : (
+
                     <div className="table-wrapper">
 
                         <table className="dashboard-table">
 
                             <thead>
+
                                 <tr>
                                     <th>Member</th>
                                     <th>Year</th>
@@ -266,12 +437,15 @@ function Dashboard() {
                                     <th>Extra</th>
                                     <th>Payment Date</th>
                                 </tr>
+
                             </thead>
 
                             <tbody>
+
                                 {deposits
                                     .slice(0, 5)
                                     .map((deposit) => (
+
                                         <tr key={deposit.id}>
 
                                             <td>
@@ -309,12 +483,15 @@ function Dashboard() {
                                             </td>
 
                                         </tr>
+
                                     ))}
+
                             </tbody>
 
                         </table>
 
                     </div>
+
                 )}
 
             </div>

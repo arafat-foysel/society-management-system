@@ -1895,3 +1895,174 @@ a {
     }
 
 }
+
+/* =========================================================
+   Dashboard Summary Card Icons
+   ========================================================= */
+
+.dashboard-card-with-icon {
+    display: flex;
+    align-items: center;
+    gap: 18px;
+}
+
+.dashboard-card-icon {
+    width: 54px;
+    height: 54px;
+    min-width: 54px;
+    border-radius: 50%;
+
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.dashboard-card-icon svg {
+    width: 25px;
+    height: 25px;
+}
+
+.dashboard-card-icon.blue {
+    color: #2563eb;
+    background: #eff6ff;
+}
+
+.dashboard-card-icon.green {
+    color: #16a34a;
+    background: #ecfdf5;
+}
+
+.dashboard-card-icon.orange {
+    color: #f97316;
+    background: #fff7ed;
+}
+
+.dashboard-card-icon.purple {
+    color: #7c3aed;
+    background: #f5f3ff;
+}
+
+.dashboard-card-content {
+    min-width: 0;
+    flex: 1;
+}
+
+.dashboard-card-content h3 {
+    margin-top: 0;
+}
+
+/* =========================================================
+   Deposits Summary Cards with Icons
+   ========================================================= */
+
+.deposit-summary-card-with-icon {
+    display: flex !important;
+    flex-direction: row !important;
+    align-items: center !important;
+    justify-content: flex-start !important;
+    gap: 18px;
+    text-align: left !important;
+}
+
+/* Icon */
+
+.deposit-summary-icon {
+    width: 54px;
+    height: 54px;
+    min-width: 54px;
+    min-height: 54px;
+
+    border-radius: 50%;
+
+    display: flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+
+    flex-shrink: 0;
+}
+
+.deposit-summary-icon svg {
+    width: 25px;
+    height: 25px;
+}
+
+
+/* Icon Colors */
+
+.deposit-summary-icon.blue {
+    color: #2563eb;
+    background: #eff6ff;
+}
+
+.deposit-summary-icon.green {
+    color: #16a34a;
+    background: #ecfdf5;
+}
+
+.deposit-summary-icon.orange {
+    color: #f97316;
+    background: #fff7ed;
+}
+
+.deposit-summary-icon.purple {
+    color: #7c3aed;
+    background: #f5f3ff;
+}
+
+
+/* Text Area */
+
+.deposit-summary-content {
+    flex: 1;
+
+    min-width: 0;
+
+    display: flex !important;
+    flex-direction: column !important;
+    align-items: flex-start !important;
+    justify-content: center !important;
+
+    text-align: left !important;
+}
+
+
+/* Title */
+
+.deposit-summary-content span {
+    display: block;
+
+    margin: 0 0 4px 0;
+
+    font-size: 14px;
+    font-weight: 600;
+
+    line-height: 1.3;
+}
+
+
+/* Number */
+
+.deposit-summary-content strong {
+    display: block;
+
+    margin: 0 0 4px 0;
+
+    font-size: 30px;
+    font-weight: 700;
+
+    line-height: 1.1;
+}
+
+
+/* Description */
+
+.deposit-summary-content small {
+    display: block;
+
+    margin: 0;
+
+    font-size: 13px;
+    font-weight: 400;
+
+    line-height: 1.3;
+}

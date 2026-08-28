@@ -524,70 +524,202 @@ function Deposits() {
 
             <div className="deposit-summary-grid">
 
-                <div className="deposit-summary-card">
+                {/* Total Deposits */}
 
-                    <span>
-                        Total Deposits
-                    </span>
+                <div className="deposit-summary-card deposit-summary-card-with-icon">
 
-                    <strong>
-                        {deposits.length}
-                    </strong>
+                    <div className="deposit-summary-icon blue">
 
-                    <small>
-                        Payment records
-                    </small>
+                        <svg
+                            viewBox="0 0 24 24"
+                            fill="none"
+                            stroke="currentColor"
+                            strokeWidth="1.8"
+                            strokeLinecap="round"
+                            strokeLinejoin="round"
+                        >
+                            <rect
+                                x="4"
+                                y="3"
+                                width="16"
+                                height="18"
+                                rx="2"
+                            />
+
+                            <path d="M8 7h8" />
+
+                            <path d="M8 11h8" />
+
+                            <path d="M8 15h4" />
+                        </svg>
+
+                    </div>
+
+                    <div className="deposit-summary-content">
+
+                        <span>
+                            Total Deposits
+                        </span>
+
+                        <strong>
+                            {deposits.length}
+                        </strong>
+
+                        <small>
+                            Payment records
+                        </small>
+
+                    </div>
 
                 </div>
 
 
-                <div className="deposit-summary-card">
+                {/* Total Amount */}
 
-                    <span>
-                        Total Amount
-                    </span>
+                <div className="deposit-summary-card deposit-summary-card-with-icon">
 
-                    <strong>
-                        {totalAmount.toFixed(2)}
-                    </strong>
+                    <div className="deposit-summary-icon green">
 
-                    <small>
-                        Deposit amount
-                    </small>
+                        <svg
+                            viewBox="0 0 24 24"
+                            fill="none"
+                            stroke="currentColor"
+                            strokeWidth="1.8"
+                            strokeLinecap="round"
+                            strokeLinejoin="round"
+                        >
+                            <circle
+                                cx="12"
+                                cy="12"
+                                r="9"
+                            />
+
+                            <path d="M12 6v12" />
+
+                            <path d="M15 9.5c0-1-1.2-1.8-3-1.8s-3 .8-3 1.8 1.2 1.6 3 2.1 3 1 3 2.1-1.2 1.8-3 1.8-3-.8-3-1.8" />
+                        </svg>
+
+                    </div>
+
+                    <div className="deposit-summary-content">
+
+                        <span>
+                            Total Amount
+                        </span>
+
+                        <strong>
+                            {totalAmount.toFixed(2)}
+                        </strong>
+
+                        <small>
+                            Deposit amount
+                        </small>
+
+                    </div>
 
                 </div>
 
 
-                <div className="deposit-summary-card">
+                {/* Total Fine */}
 
-                    <span>
-                        Total Fine
-                    </span>
+                <div className="deposit-summary-card deposit-summary-card-with-icon">
 
-                    <strong>
-                        {totalFine.toFixed(2)}
-                    </strong>
+                    <div className="deposit-summary-icon orange">
 
-                    <small>
-                        Collected fines
-                    </small>
+                        <svg
+                            viewBox="0 0 24 24"
+                            fill="none"
+                            stroke="currentColor"
+                            strokeWidth="1.8"
+                            strokeLinecap="round"
+                            strokeLinejoin="round"
+                        >
+                            <circle
+                                cx="12"
+                                cy="12"
+                                r="9"
+                            />
+
+                            <path d="M12 7v5" />
+
+                            <path d="M12 16h.01" />
+                        </svg>
+
+                    </div>
+
+                    <div className="deposit-summary-content">
+
+                        <span>
+                            Total Fine
+                        </span>
+
+                        <strong>
+                            {totalFine.toFixed(2)}
+                        </strong>
+
+                        <small>
+                            Collected fines
+                        </small>
+
+                    </div>
 
                 </div>
 
 
-                <div className="deposit-summary-card">
+                {/* Grand Total */}
 
-                    <span>
-                        Grand Total
-                    </span>
+                <div className="deposit-summary-card deposit-summary-card-with-icon">
 
-                    <strong>
-                        {grandTotal.toFixed(2)}
-                    </strong>
+                    <div className="deposit-summary-icon purple">
 
-                    <small>
-                        Total collected
-                    </small>
+                        <svg
+                            viewBox="0 0 24 24"
+                            fill="none"
+                            stroke="currentColor"
+                            strokeWidth="1.8"
+                            strokeLinecap="round"
+                            strokeLinejoin="round"
+                        >
+                            <rect
+                                x="5"
+                                y="2"
+                                width="14"
+                                height="20"
+                                rx="2"
+                            />
+
+                            <path d="M8 6h8" />
+
+                            <path d="M8 10h2" />
+
+                            <path d="M14 10h2" />
+
+                            <path d="M8 14h2" />
+
+                            <path d="M14 14h2" />
+
+                            <path d="M8 18h2" />
+
+                            <path d="M14 18h2" />
+                        </svg>
+
+                    </div>
+
+                    <div className="deposit-summary-content">
+
+                        <span>
+                            Grand Total
+                        </span>
+
+                        <strong>
+                            {grandTotal.toFixed(2)}
+                        </strong>
+
+                        <small>
+                            Total collected
+                        </small>
+
+                    </div>
 
                 </div>
 
