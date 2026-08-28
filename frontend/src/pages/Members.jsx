@@ -1,4 +1,6 @@
 import { useEffect, useMemo, useState } from "react";
+import { useNavigate } from "react-router-dom";
+
 import { apiFetch } from "../services/api";
 
 const ROLE_OPTIONS = [
@@ -27,13 +29,13 @@ const EMPTY_FORM = {
 };
 
 function Members() {
+    const navigate = useNavigate();
+
     const [members, setMembers] = useState([]);
 
     const [formData, setFormData] = useState(EMPTY_FORM);
 
     const [editingMember, setEditingMember] = useState(null);
-
-    const [selectedMember, setSelectedMember] = useState(null);
 
     const [showForm, setShowForm] = useState(false);
 
@@ -81,14 +83,12 @@ function Members() {
                     ? data
                     : data.results || []
             );
-
         } catch (err) {
             console.error("Error loading members:", err);
 
             setError(
                 err.message || "Failed to load members."
             );
-
         } finally {
             setLoading(false);
         }
@@ -111,16 +111,19 @@ function Members() {
 
     function openAddForm() {
         setEditingMember(null);
-        setSelectedMember(null);
         setFormData(EMPTY_FORM);
         setError("");
         setSuccess("");
         setShowForm(true);
+
+        window.scrollTo({
+            top: 0,
+            behavior: "smooth",
+        });
     }
 
     function startEdit(member) {
         setEditingMember(member);
-        setSelectedMember(null);
 
         setFormData({
             first_name: member.first_name || "",
@@ -148,10 +151,7 @@ function Members() {
     }
 
     function viewMember(member) {
-        setSelectedMember(member);
-        setShowForm(false);
-        setError("");
-        setSuccess("");
+        navigate(`/members/${member.id}/`);
     }
 
     async function handleSubmit(event) {
@@ -218,7 +218,10 @@ function Members() {
             setShowForm(false);
         } catch (err) {
             console.error("Error saving member:", err);
-            setError(err.message || "Failed to save member.");
+
+            setError(
+                err.message || "Failed to save member."
+            );
         } finally {
             setSaving(false);
         }
@@ -245,7 +248,12 @@ function Members() {
             );
 
             if (!response.ok) {
-                throw new Error("Failed to delete member.");
+                const data = await response.json().catch(() => ({}));
+
+                throw new Error(
+                    data.detail ||
+                    "Failed to delete member."
+                );
             }
 
             setMembers((previous) =>
@@ -254,10 +262,6 @@ function Members() {
                 )
             );
 
-            if (selectedMember?.id === id) {
-                setSelectedMember(null);
-            }
-
             if (editingMember?.id === id) {
                 resetForm();
             }
@@ -265,7 +269,10 @@ function Members() {
             setSuccess("Member deleted successfully.");
         } catch (err) {
             console.error("Error deleting member:", err);
-            setError("Failed to delete member.");
+
+            setError(
+                err.message || "Failed to delete member."
+            );
         }
     }
 
@@ -320,20 +327,13 @@ function Members() {
         setStatusFilter("");
     }
 
-    function formatDate(date) {
-        if (!date) {
-            return "-";
-        }
-
-        return date;
-    }
-
     return (
         <div className="page members-page">
 
             {/* PAGE HEADER */}
 
             <div className="page-header">
+
                 <div>
                     <h1>Members</h1>
 
@@ -352,6 +352,7 @@ function Members() {
                         + Add Member
                     </button>
                 )}
+
             </div>
 
 
@@ -369,147 +370,6 @@ function Members() {
             {error && (
                 <div className="error-message">
                     {error}
-                </div>
-            )}
-
-
-            {/* MEMBER DETAILS */}
-
-            {selectedMember && (
-                <div className="content-card member-details-card">
-
-                    <div className="card-header">
-                        <div>
-                            <h2>Member Details</h2>
-
-                            <p>
-                                Complete information
-                                about this member.
-                            </p>
-                        </div>
-
-                        <button
-                            type="button"
-                            className="secondary-button"
-                            onClick={() =>
-                                setSelectedMember(null)
-                            }
-                        >
-                            Close
-                        </button>
-                    </div>
-
-                    <div className="details-grid">
-
-                        <div className="detail-item">
-                            <span>ID</span>
-                            <strong>
-                                {selectedMember.id}
-                            </strong>
-                        </div>
-
-                        <div className="detail-item">
-                            <span>First Name</span>
-                            <strong>
-                                {selectedMember.first_name}
-                            </strong>
-                        </div>
-
-                        <div className="detail-item">
-                            <span>Last Name</span>
-                            <strong>
-                                {selectedMember.last_name}
-                            </strong>
-                        </div>
-
-                        <div className="detail-item">
-                            <span>Email</span>
-                            <strong>
-                                {selectedMember.email || "-"}
-                            </strong>
-                        </div>
-
-                        <div className="detail-item">
-                            <span>Phone</span>
-                            <strong>
-                                {selectedMember.phone}
-                            </strong>
-                        </div>
-
-                        <div className="detail-item">
-                            <span>NID Number</span>
-                            <strong>
-                                {selectedMember.nid_number}
-                            </strong>
-                        </div>
-
-                        <div className="detail-item">
-                            <span>Father Name</span>
-                            <strong>
-                                {selectedMember.father_name || "-"}
-                            </strong>
-                        </div>
-
-                        <div className="detail-item">
-                            <span>Mother Name</span>
-                            <strong>
-                                {selectedMember.mother_name || "-"}
-                            </strong>
-                        </div>
-
-                        <div className="detail-item detail-full">
-                            <span>Address</span>
-                            <strong>
-                                {selectedMember.address || "-"}
-                            </strong>
-                        </div>
-
-                        <div className="detail-item">
-                            <span>Joining Date</span>
-                            <strong>
-                                {formatDate(
-                                    selectedMember.joining_date
-                                )}
-                            </strong>
-                        </div>
-
-                        <div className="detail-item">
-                            <span>Entry Fee</span>
-                            <strong>
-                                {Number(
-                                    selectedMember.entry_fee || 0
-                                ).toFixed(2)}
-                            </strong>
-                        </div>
-
-                        <div className="detail-item">
-                            <span>Role</span>
-                            <strong>
-                                {selectedMember.role}
-                            </strong>
-                        </div>
-
-                        <div className="detail-item">
-                            <span>Status</span>
-                            <strong>
-                                {selectedMember.status}
-                            </strong>
-                        </div>
-
-                    </div>
-
-                    <div className="details-actions">
-                        <button
-                            type="button"
-                            className="primary-button"
-                            onClick={() =>
-                                startEdit(selectedMember)
-                            }
-                        >
-                            Edit Member
-                        </button>
-                    </div>
-
                 </div>
             )}
 

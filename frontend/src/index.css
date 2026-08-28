@@ -1440,3 +1440,458 @@ a {
     color: #b91c1c;
     font-size: 14px;
 }
+
+
+/* =========================================================
+   MEMBER DETAILS PAGE
+   ========================================================= */
+
+.member-details-page {
+    width: 100%;
+}
+
+
+/* =========================================================
+   TOP ACTIONS
+   ========================================================= */
+
+.member-details-actions {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 20px;
+}
+
+
+.primary-button,
+.secondary-button {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    text-decoration: none;
+    font-size: 14px;
+    font-weight: 600;
+    border-radius: 8px;
+    padding: 11px 18px;
+    transition: all 0.2s ease;
+}
+
+
+.primary-button {
+    background: #2563eb;
+    color: white;
+    border: 1px solid #2563eb;
+}
+
+
+.primary-button:hover {
+    background: #1d4ed8;
+    color: white;
+}
+
+
+.primary-button .member-detail-icon {
+    width: 17px;
+    height: 17px;
+}
+
+
+.secondary-button {
+    background: white;
+    color: #334155;
+    border: 1px solid #cbd5e1;
+}
+
+
+.secondary-button:hover {
+    background: #f8fafc;
+}
+
+
+/* =========================================================
+   MEMBER INFORMATION CARD
+   ========================================================= */
+
+.member-details-card {
+    background: white;
+    border: 1px solid #e2e8f0;
+    border-radius: 14px;
+    box-shadow: 0 4px 18px rgba(15, 23, 42, 0.05);
+    overflow: hidden;
+}
+
+
+.member-details-card-header {
+    padding: 24px 28px 20px;
+    border-bottom: 1px solid #e2e8f0;
+}
+
+
+.member-details-card-header h1 {
+    margin: 0;
+    font-size: 24px;
+    font-weight: 700;
+    color: #1e293b;
+}
+
+
+.member-details-card-header p {
+    margin: 6px 0 0;
+    color: #64748b;
+    font-size: 15px;
+}
+
+
+/* =========================================================
+   TWO COLUMN INFORMATION GRID
+   ========================================================= */
+
+.member-information-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+}
+
+
+.member-info-item {
+    min-height: 82px;
+    display: flex;
+    align-items: center;
+    gap: 16px;
+    padding: 18px 22px;
+    border-bottom: 1px solid #e2e8f0;
+}
+
+
+.member-info-item:nth-child(odd) {
+    border-right: 1px solid #e2e8f0;
+}
+
+
+.member-info-full {
+    grid-column: 1 / -1;
+    border-right: none !important;
+}
+
+
+.member-info-icon {
+    width: 42px;
+    height: 42px;
+    min-width: 42px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 11px;
+    background: #eff6ff;
+    color: #2563eb;
+}
+
+
+.member-info-item:nth-child(4n + 2) .member-info-icon {
+    background: #f5f3ff;
+    color: #7c3aed;
+}
+
+
+.member-info-item:nth-child(4n + 3) .member-info-icon {
+    background: #ecfdf5;
+    color: #16a34a;
+}
+
+
+.member-info-item:nth-child(4n + 4) .member-info-icon {
+    background: #fff7ed;
+    color: #f97316;
+}
+
+
+.member-detail-icon {
+    width: 21px;
+    height: 21px;
+}
+
+
+.member-info-content {
+    min-width: 0;
+}
+
+
+.member-info-label {
+    font-size: 12px;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.04em;
+    color: #64748b;
+    margin-bottom: 6px;
+}
+
+
+.member-info-value {
+    font-size: 16px;
+    font-weight: 600;
+    color: #1e293b;
+    word-break: break-word;
+}
+
+
+.member-info-full .member-info-value {
+    white-space: pre-wrap;
+}
+
+
+/* =========================================================
+   SUMMARY CARDS
+   ========================================================= */
+
+.member-summary-grid {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 18px;
+    margin-top: 20px;
+}
+
+
+.member-summary-card {
+    display: flex;
+    align-items: center;
+    gap: 17px;
+    background: white;
+    border: 1px solid #e2e8f0;
+    border-radius: 13px;
+    padding: 20px;
+    min-height: 105px;
+    box-shadow: 0 4px 16px rgba(15, 23, 42, 0.04);
+}
+
+
+.summary-icon {
+    width: 54px;
+    height: 54px;
+    min-width: 54px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 50%;
+}
+
+
+.summary-icon .member-detail-icon {
+    width: 27px;
+    height: 27px;
+}
+
+
+.summary-icon-blue {
+    background: #eff6ff;
+    color: #2563eb;
+}
+
+
+.summary-icon-green {
+    background: #ecfdf5;
+    color: #16a34a;
+}
+
+
+.summary-icon-orange {
+    background: #fff7ed;
+    color: #f97316;
+}
+
+
+.summary-icon-purple {
+    background: #f5f3ff;
+    color: #7c3aed;
+}
+
+
+.summary-label {
+    color: #64748b;
+    font-size: 13px;
+    font-weight: 600;
+    margin-bottom: 5px;
+}
+
+
+.summary-number {
+    color: #1e293b;
+    font-size: 25px;
+    line-height: 1.1;
+    font-weight: 700;
+}
+
+
+.summary-description {
+    color: #94a3b8;
+    font-size: 12px;
+    margin-top: 5px;
+}
+
+
+/* =========================================================
+   DEPOSIT HISTORY
+   ========================================================= */
+
+.member-deposit-card {
+    background: white;
+    border: 1px solid #e2e8f0;
+    border-radius: 14px;
+    box-shadow: 0 4px 18px rgba(15, 23, 42, 0.05);
+    margin-top: 20px;
+    padding: 24px;
+}
+
+
+.member-deposit-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 18px;
+}
+
+
+.member-deposit-header h2 {
+    margin: 0;
+    font-size: 20px;
+    color: #1e293b;
+}
+
+
+.member-deposit-header a {
+    color: #2563eb;
+    font-size: 14px;
+    font-weight: 600;
+    text-decoration: none;
+}
+
+
+.member-deposit-header a:hover {
+    text-decoration: underline;
+}
+
+
+/* =========================================================
+   EMPTY DEPOSIT STATE
+   ========================================================= */
+
+.member-empty-deposits {
+    min-height: 170px;
+    border: 1px dashed #cbd5e1;
+    border-radius: 10px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-direction: column;
+    gap: 7px;
+    color: #64748b;
+    text-align: center;
+}
+
+
+.member-empty-deposits strong {
+    color: #475569;
+    font-size: 15px;
+}
+
+
+.member-empty-deposits span {
+    font-size: 13px;
+    color: #94a3b8;
+}
+
+
+.empty-deposit-icon {
+    width: 48px;
+    height: 48px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: #f8fafc;
+    color: #94a3b8;
+    margin-bottom: 4px;
+}
+
+
+.empty-deposit-icon .member-detail-icon {
+    width: 25px;
+    height: 25px;
+}
+
+
+/* =========================================================
+   LOADING
+   ========================================================= */
+
+.member-details-loading {
+    background: white;
+    border: 1px solid #e2e8f0;
+    border-radius: 12px;
+    padding: 40px;
+    text-align: center;
+    color: #64748b;
+}
+
+
+/* =========================================================
+   RESPONSIVE
+   ========================================================= */
+
+@media (max-width: 1100px) {
+
+    .member-summary-grid {
+        grid-template-columns: repeat(2, 1fr);
+    }
+
+}
+
+
+@media (max-width: 768px) {
+
+    .member-details-actions {
+        align-items: stretch;
+        flex-direction: column;
+        gap: 10px;
+    }
+
+
+    .member-information-grid {
+        grid-template-columns: 1fr;
+    }
+
+
+    .member-info-item {
+        border-right: none !important;
+    }
+
+
+    .member-info-full {
+        grid-column: auto;
+    }
+
+
+    .member-summary-grid {
+        grid-template-columns: 1fr;
+    }
+
+
+    .member-details-card-header {
+        padding: 20px;
+    }
+
+
+    .member-info-item {
+        padding: 16px;
+    }
+
+
+    .member-deposit-card {
+        padding: 18px;
+    }
+
+
+    .table-wrapper {
+        overflow-x: auto;
+    }
+
+}
