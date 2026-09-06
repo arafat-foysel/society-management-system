@@ -813,6 +813,7 @@ a {
     background: #f8fafc;
 }
 
+
 .member-name {
     color: #1e293b;
 
@@ -908,6 +909,20 @@ a {
     color: #b91c1c;
 }
 
+.status-approved {
+    background: #ecfdf5;
+    color: #047857;
+}
+
+.status-pending {
+    background: #fff7ed;
+    color: #c2410c;
+}
+
+.status-rejected {
+    background: #fef2f2;
+    color: #b91c1c;
+}
 
 /* =========================================================
    EMPTY STATE

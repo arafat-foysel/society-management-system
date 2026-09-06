@@ -1,6 +1,10 @@
 import { useEffect, useState } from "react";
+import {
+    useSearchParams,
+} from "react-router-dom";
 
 import { apiFetch } from "../services/api";
+import { getCurrentUser } from "../services/auth";
 
 const MONTHS = [
     "January",
@@ -18,7 +22,9 @@ const MONTHS = [
 ];
 
 const normalizeMonth = (month) => {
-    if (!month) return "";
+    if (!month) {
+        return "";
+    }
 
     const value = String(month).trim();
 
@@ -42,6 +48,25 @@ const normalizeMonth = (month) => {
     return monthMap[numericMonth] || value;
 };
 
+const getTodayDate = () => {
+    const today = new Date();
+
+    const year =
+        today.getFullYear();
+
+    const month =
+        String(
+            today.getMonth() + 1
+        ).padStart(2, "0");
+
+    const day =
+        String(
+            today.getDate()
+        ).padStart(2, "0");
+
+    return `${year}-${month}-${day}`;
+};
+
 const getEmptyForm = () => ({
     member: "",
     year: new Date().getFullYear(),
@@ -53,21 +78,76 @@ const getEmptyForm = () => ({
     remarks: "",
 });
 
+const getStatusClass = (status) => {
+    switch (status) {
+        case "APPROVED":
+            return "status-badge status-approved";
+
+        case "PENDING":
+            return "status-badge status-pending";
+
+        case "REJECTED":
+            return "status-badge status-rejected";
+
+        default:
+            return "status-badge";
+    }
+};
+
+const getStatusLabel = (status) => {
+    switch (status) {
+        case "APPROVED":
+            return "Approved";
+
+        case "PENDING":
+            return "Pending";
+
+        case "REJECTED":
+            return "Rejected";
+
+        default:
+            return status || "Unknown";
+    }
+};
+
 function Deposits() {
+    const [searchParams, setSearchParams] =
+        useSearchParams();
+
     const [members, setMembers] = useState([]);
     const [deposits, setDeposits] = useState([]);
+    const [currentUser, setCurrentUser] =
+        useState(null);
 
-    const [loading, setLoading] = useState(true);
-    const [saving, setSaving] = useState(false);
+    const [loading, setLoading] =
+        useState(true);
 
-    const [message, setMessage] = useState("");
-    const [error, setError] = useState("");
+    const [saving, setSaving] =
+        useState(false);
 
-    const [editingId, setEditingId] = useState(null);
+    const [loadingDuePayment, setLoadingDuePayment] =
+        useState(false);
 
-    const [showForm, setShowForm] = useState(false);
+    const [message, setMessage] =
+        useState("");
 
-    const [formData, setFormData] = useState(getEmptyForm());
+    const [error, setError] =
+        useState("");
+
+    const [editingId, setEditingId] =
+        useState(null);
+
+    const [showForm, setShowForm] =
+        useState(false);
+
+    const [formData, setFormData] =
+        useState(
+            getEmptyForm()
+        );
+
+    const isAdmin =
+        currentUser?.system_role ===
+        "ADMIN";
 
     // =========================================================
     // LOAD MEMBERS
@@ -75,23 +155,42 @@ function Deposits() {
 
     const loadMembers = async () => {
         try {
-            const response = await apiFetch("/members/");
+            const response =
+                await apiFetch(
+                    "/members/"
+                );
 
             if (!response.ok) {
-                throw new Error("Failed to load members.");
+                const data =
+                    await response.json().catch(
+                        () => ({})
+                    );
+
+                throw new Error(
+                    data.detail ||
+                    "Failed to load members."
+                );
             }
 
-            const data = await response.json();
+            const data =
+                await response.json();
 
             setMembers(
                 Array.isArray(data)
                     ? data
                     : data.results || []
             );
-        } catch (err) {
-            console.error("Error loading members:", err);
 
-            setError("Failed to load members.");
+        } catch (err) {
+            console.error(
+                "Error loading members:",
+                err
+            );
+
+            setError(
+                err.message ||
+                "Failed to load members."
+            );
         }
     };
 
@@ -101,25 +200,68 @@ function Deposits() {
 
     const loadDeposits = async () => {
         try {
-            const response = await apiFetch("/deposits/");
+            const response =
+                await apiFetch(
+                    "/deposits/"
+                );
 
             if (!response.ok) {
-                throw new Error("Failed to load deposits.");
+                const data =
+                    await response.json().catch(
+                        () => ({})
+                    );
+
+                throw new Error(
+                    data.detail ||
+                    "Failed to load deposits."
+                );
             }
 
-            const data = await response.json();
+            const data =
+                await response.json();
 
             setDeposits(
                 Array.isArray(data)
                     ? data
                     : data.results || []
             );
-        } catch (err) {
-            console.error("Error loading deposits:", err);
 
-            setError("Failed to load deposits.");
+        } catch (err) {
+            console.error(
+                "Error loading deposits:",
+                err
+            );
+
+            setError(
+                err.message ||
+                "Failed to load deposits."
+            );
+
         } finally {
             setLoading(false);
+        }
+    };
+
+    // =========================================================
+    // LOAD CURRENT USER
+    // =========================================================
+
+    const loadCurrentUser = async () => {
+        try {
+            const user =
+                await getCurrentUser();
+
+            setCurrentUser(user);
+
+        } catch (err) {
+            console.error(
+                "Error loading current user:",
+                err
+            );
+
+            setError(
+                "Failed to load current user."
+            );
         }
     };
 
@@ -130,19 +272,281 @@ function Deposits() {
     useEffect(() => {
         loadMembers();
         loadDeposits();
+        loadCurrentUser();
     }, []);
+
+    // =========================================================
+    // AUTOMATICALLY SELECT USER'S OWN MEMBER
+    // =========================================================
+
+    useEffect(() => {
+        if (
+            isAdmin ||
+            !currentUser ||
+            members.length === 0 ||
+            editingId
+        ) {
+            return;
+        }
+
+        const ownMember =
+            members.find(
+                (member) =>
+                    Number(member.user) ===
+                    Number(currentUser.id)
+            ) || members[0];
+
+        if (
+            ownMember &&
+            !formData.member
+        ) {
+            setFormData(
+                (previous) => ({
+                    ...previous,
+                    member: String(
+                        ownMember.id
+                    ),
+                })
+            );
+        }
+    }, [
+        currentUser,
+        members,
+        isAdmin,
+        editingId,
+        formData.member,
+    ]);
+
+    // =========================================================
+    // PAY NOW
+    //
+    // Expected URL:
+    // /deposits?pay_year=2026&pay_month=September
+    // =========================================================
+
+    useEffect(() => {
+        const payYear =
+            searchParams.get(
+                "pay_year"
+            );
+
+        const payMonth =
+            searchParams.get(
+                "pay_month"
+            );
+
+        if (
+            isAdmin ||
+            !currentUser ||
+            members.length === 0 ||
+            !payYear ||
+            !payMonth
+        ) {
+            return;
+        }
+
+        const openDuePayment =
+            async () => {
+                try {
+                    setLoadingDuePayment(
+                        true
+                    );
+
+                    setMessage("");
+                    setError("");
+
+                    const response =
+                        await apiFetch(
+                            "/deposits/due/"
+                        );
+
+                    if (!response.ok) {
+                        const data =
+                            await response
+                                .json()
+                                .catch(
+                                    () => ({})
+                                );
+
+                        throw new Error(
+                            data.detail ||
+                            "Failed to load due payment."
+                        );
+                    }
+
+                    const data =
+                        await response.json();
+
+                    const normalizedMonth =
+                        normalizeMonth(
+                            payMonth
+                        );
+
+                    const duePayment =
+                        (
+                            data.due_payments ||
+                            []
+                        ).find(
+                            (payment) =>
+                                Number(
+                                    payment.year
+                                ) ===
+                                    Number(
+                                        payYear
+                                    ) &&
+                                normalizeMonth(
+                                    payment.month_name
+                                ) ===
+                                    normalizedMonth
+                        );
+
+                    if (!duePayment) {
+                        throw new Error(
+                            `${normalizedMonth} ${payYear} is no longer due.`
+                        );
+                    }
+
+                    if (
+                        duePayment.status !==
+                        "DUE"
+                    ) {
+                        throw new Error(
+                            `${normalizedMonth} ${payYear} is currently ${duePayment.status.toLowerCase()}.`
+                        );
+                    }
+
+                    const ownMember =
+                        members.find(
+                            (member) =>
+                                Number(
+                                    member.id
+                                ) ===
+                                Number(
+                                    data.member
+                                )
+                        ) ||
+                        members.find(
+                            (member) =>
+                                Number(
+                                    member.user
+                                ) ===
+                                Number(
+                                    currentUser.id
+                                )
+                        ) ||
+                        members[0];
+
+                    if (!ownMember) {
+                        throw new Error(
+                            "Your member account could not be found."
+                        );
+                    }
+
+                    setEditingId(null);
+
+                    setFormData({
+                        member: String(
+                            ownMember.id
+                        ),
+
+                        year:
+                            Number(
+                                duePayment.year
+                            ),
+
+                        month:
+                            normalizeMonth(
+                                duePayment.month_name
+                            ),
+
+                        amount:
+                            Number(
+                                duePayment.remaining_amount ??
+                                duePayment.expected_amount ??
+                                0
+                            ).toFixed(2),
+
+                        fine: "0",
+
+                        extra: "0",
+
+                        payment_date:
+                            getTodayDate(),
+
+                        remarks:
+                            `Payment for ${duePayment.month_name} ${duePayment.year}`,
+                    });
+
+                    setShowForm(true);
+
+                    // Remove the Pay Now query
+                    // so a browser refresh does
+                    // not reopen the form.
+                    setSearchParams(
+                        {},
+                        {
+                            replace: true,
+                        }
+                    );
+
+                    window.scrollTo({
+                        top: 0,
+                        behavior: "smooth",
+                    });
+
+                } catch (err) {
+                    console.error(
+                        "Error opening due payment:",
+                        err
+                    );
+
+                    setError(
+                        err.message ||
+                        "Failed to open due payment."
+                    );
+
+                    setSearchParams(
+                        {},
+                        {
+                            replace: true,
+                        }
+                    );
+
+                } finally {
+                    setLoadingDuePayment(
+                        false
+                    );
+                }
+            };
+
+        openDuePayment();
+
+    }, [
+        currentUser,
+        members,
+        isAdmin,
+        searchParams,
+        setSearchParams,
+    ]);
 
     // =========================================================
     // INPUT CHANGE
     // =========================================================
 
-    const handleChange = (event) => {
-        const { name, value } = event.target;
+    const handleChange = (
+        event
+    ) => {
+        const {
+            name,
+            value,
+        } = event.target;
 
-        setFormData((previous) => ({
-            ...previous,
-            [name]: value,
-        }));
+        setFormData(
+            (previous) => ({
+                ...previous,
+                [name]: value,
+            })
+        );
     };
 
     // =========================================================
@@ -152,7 +556,23 @@ function Deposits() {
     const openAddForm = () => {
         setEditingId(null);
 
-        setFormData(getEmptyForm());
+        const ownMember =
+            members.find(
+                (member) =>
+                    Number(member.user) ===
+                    Number(currentUser?.id)
+            ) || members[0];
+
+        setFormData({
+            ...getEmptyForm(),
+
+            member:
+                !isAdmin && ownMember
+                    ? String(
+                          ownMember.id
+                      )
+                    : "",
+        });
 
         setMessage("");
         setError("");
@@ -170,7 +590,9 @@ function Deposits() {
     // =========================================================
 
     const resetForm = () => {
-        setFormData(getEmptyForm());
+        setFormData(
+            getEmptyForm()
+        );
 
         setEditingId(null);
 
@@ -184,50 +606,88 @@ function Deposits() {
     // CREATE / UPDATE
     // =========================================================
 
-    const handleSubmit = async (event) => {
+    const handleSubmit = async (
+        event
+    ) => {
         event.preventDefault();
 
         setMessage("");
         setError("");
 
         if (!formData.member) {
-            setError("Please select a member.");
+            setError(
+                "Please select a member."
+            );
             return;
         }
 
         if (!formData.year) {
-            setError("Please enter the year.");
+            setError(
+                "Please enter the year."
+            );
             return;
         }
 
         if (!formData.month) {
-            setError("Please select a month.");
+            setError(
+                "Please select a month."
+            );
             return;
         }
 
         if (!formData.amount) {
-            setError("Please enter the amount.");
+            setError(
+                "Please enter the amount."
+            );
             return;
         }
 
         if (!formData.payment_date) {
-            setError("Please select the payment date.");
+            setError(
+                "Please select the payment date."
+            );
             return;
         }
 
-        const amount = String(formData.amount).replace(",", ".");
-        const fine = String(formData.fine || "0").replace(",", ".");
-        const extra = String(formData.extra || "0").replace(",", ".");
+        const amount =
+            String(
+                formData.amount
+            ).replace(",", ".");
+
+        const fine =
+            String(
+                formData.fine || "0"
+            ).replace(",", ".");
+
+        const extra =
+            String(
+                formData.extra || "0"
+            ).replace(",", ".");
 
         const payload = {
-            member: Number(formData.member),
-            year: Number(formData.year),
-            month: normalizeMonth(formData.month),
+            member: Number(
+                formData.member
+            ),
+
+            year: Number(
+                formData.year
+            ),
+
+            month: normalizeMonth(
+                formData.month
+            ),
+
             amount,
+
             fine,
+
             extra,
-            payment_date: formData.payment_date,
-            remarks: formData.remarks,
+
+            payment_date:
+                formData.payment_date,
+
+            remarks:
+                formData.remarks,
         };
 
         try {
@@ -237,16 +697,22 @@ function Deposits() {
 
             // =================================================
             // UPDATE EXISTING DEPOSIT
+            // ADMIN ONLY
             // =================================================
 
             if (editingId) {
-                response = await apiFetch(
-                    `/deposits/${editingId}/`,
-                    {
-                        method: "PUT",
-                        body: JSON.stringify(payload),
-                    }
-                );
+                response =
+                    await apiFetch(
+                        `/deposits/${editingId}/`,
+                        {
+                            method: "PUT",
+
+                            body:
+                                JSON.stringify(
+                                    payload
+                                ),
+                        }
+                    );
             }
 
             // =================================================
@@ -254,19 +720,32 @@ function Deposits() {
             // =================================================
 
             else {
-                response = await apiFetch(
-                    "/deposits/",
-                    {
-                        method: "POST",
-                        body: JSON.stringify(payload),
-                    }
-                );
+                response =
+                    await apiFetch(
+                        "/deposits/",
+                        {
+                            method: "POST",
+
+                            body:
+                                JSON.stringify(
+                                    payload
+                                ),
+                        }
+                    );
             }
 
-            const data = await response.json();
+            const data =
+                await response
+                    .json()
+                    .catch(
+                        () => ({})
+                    );
 
             if (!response.ok) {
-                console.error("Django error:", data);
+                console.error(
+                    "Django error:",
+                    data
+                );
 
                 throw new Error(
                     data.detail ||
@@ -274,13 +753,25 @@ function Deposits() {
                 );
             }
 
-            setMessage(
-                editingId
-                    ? "Deposit updated successfully!"
-                    : "Deposit added successfully!"
-            );
+            if (editingId) {
+                setMessage(
+                    "Deposit updated successfully!"
+                );
 
-            setFormData(getEmptyForm());
+            } else if (isAdmin) {
+                setMessage(
+                    "Deposit added successfully!"
+                );
+
+            } else {
+                setMessage(
+                    "Payment submitted successfully! Waiting for admin approval."
+                );
+            }
+
+            setFormData(
+                getEmptyForm()
+            );
 
             setEditingId(null);
 
@@ -289,41 +780,66 @@ function Deposits() {
             await loadDeposits();
 
         } catch (err) {
-            console.error("Error saving deposit:", err);
+            console.error(
+                "Error saving deposit:",
+                err
+            );
 
             setError(
                 `Failed to save deposit: ${err.message}`
             );
+
         } finally {
             setSaving(false);
         }
     };
 
     // =========================================================
-    // EDIT
+    // EDIT DEPOSIT
+    // ADMIN ONLY
     // =========================================================
 
-    const handleEdit = (deposit) => {
-        setEditingId(deposit.id);
+    const handleEdit = (
+        deposit
+    ) => {
+        if (!isAdmin) {
+            return;
+        }
+
+        setEditingId(
+            deposit.id
+        );
 
         setFormData({
-            member: String(deposit.member),
+            member: String(
+                deposit.member
+            ),
 
             year: deposit.year,
 
-            month: normalizeMonth(deposit.month),
+            month: normalizeMonth(
+                deposit.month
+            ),
 
-            amount: deposit.amount ?? "",
+            amount:
+                deposit.amount ??
+                "",
 
-            fine: deposit.fine ?? "0",
+            fine:
+                deposit.fine ??
+                "0",
 
-            extra: deposit.extra ?? "0",
+            extra:
+                deposit.extra ??
+                "0",
 
             payment_date:
-                deposit.payment_date ?? "",
+                deposit.payment_date ??
+                "",
 
             remarks:
-                deposit.remarks ?? "",
+                deposit.remarks ??
+                "",
         });
 
         setMessage("");
@@ -338,13 +854,21 @@ function Deposits() {
     };
 
     // =========================================================
-    // DELETE
+    // DELETE DEPOSIT
+    // ADMIN ONLY
     // =========================================================
 
-    const handleDelete = async (id) => {
-        const confirmed = window.confirm(
-            "Are you sure you want to delete this deposit?"
-        );
+    const handleDelete = async (
+        id
+    ) => {
+        if (!isAdmin) {
+            return;
+        }
+
+        const confirmed =
+            window.confirm(
+                "Are you sure you want to delete this deposit?"
+            );
 
         if (!confirmed) {
             return;
@@ -354,18 +878,20 @@ function Deposits() {
             setError("");
             setMessage("");
 
-            const response = await apiFetch(
-                `/deposits/${id}/`,
-                {
-                    method: "DELETE",
-                }
-            );
+            const response =
+                await apiFetch(
+                    `/deposits/${id}/`,
+                    {
+                        method: "DELETE",
+                    }
+                );
 
             if (!response.ok) {
                 let data = {};
 
                 try {
-                    data = await response.json();
+                    data =
+                        await response.json();
                 } catch {
                     data = {};
                 }
@@ -395,19 +921,110 @@ function Deposits() {
     };
 
     // =========================================================
+    // APPROVE / REJECT PAYMENT
+    // ADMIN ONLY
+    // =========================================================
+
+    const handleStatusChange =
+        async (
+            id,
+            status
+        ) => {
+            if (!isAdmin) {
+                return;
+            }
+
+            const action =
+                status === "APPROVED"
+                    ? "approve"
+                    : "reject";
+
+            const confirmed =
+                window.confirm(
+                    `Are you sure you want to ${action} this payment?`
+                );
+
+            if (!confirmed) {
+                return;
+            }
+
+            try {
+                setError("");
+                setMessage("");
+
+                const response =
+                    await apiFetch(
+                        `/deposits/${id}/`,
+                        {
+                            method: "PATCH",
+
+                            body:
+                                JSON.stringify(
+                                    {
+                                        status,
+                                    }
+                                ),
+                        }
+                    );
+
+                const data =
+                    await response
+                        .json()
+                        .catch(
+                            () => ({})
+                        );
+
+                if (!response.ok) {
+                    throw new Error(
+                        data.detail ||
+                        JSON.stringify(
+                            data
+                        )
+                    );
+                }
+
+                setMessage(
+                    status ===
+                        "APPROVED"
+                        ? "Payment approved successfully!"
+                        : "Payment rejected successfully!"
+                );
+
+                await loadDeposits();
+
+            } catch (err) {
+                console.error(
+                    "Error changing deposit status:",
+                    err
+                );
+
+                setError(
+                    `Failed to ${action} payment: ${err.message}`
+                );
+            }
+        };
+
+    // =========================================================
     // MEMBER NAME
     // =========================================================
 
-    const getMemberName = (deposit) => {
+    const getMemberName = (
+        deposit
+    ) => {
         if (deposit.member_name) {
             return deposit.member_name;
         }
 
-        const member = members.find(
-            (item) =>
-                Number(item.id) ===
-                Number(deposit.member)
-        );
+        const member =
+            members.find(
+                (item) =>
+                    Number(
+                        item.id
+                    ) ===
+                    Number(
+                        deposit.member
+                    )
+            );
 
         if (member) {
             return `${member.first_name} ${member.last_name}`;
@@ -417,26 +1034,69 @@ function Deposits() {
     };
 
     // =========================================================
-    // TOTALS
+    // APPROVED / PENDING PAYMENTS
     // =========================================================
 
-    const totalAmount = deposits.reduce(
-        (total, deposit) =>
-            total + Number(deposit.amount || 0),
-        0
-    );
+    const approvedDeposits =
+        deposits.filter(
+            (deposit) =>
+                deposit.status ===
+                "APPROVED"
+        );
 
-    const totalFine = deposits.reduce(
-        (total, deposit) =>
-            total + Number(deposit.fine || 0),
-        0
-    );
+    const pendingDeposits =
+        deposits.filter(
+            (deposit) =>
+                deposit.status ===
+                "PENDING"
+        );
 
-    const totalExtra = deposits.reduce(
-        (total, deposit) =>
-            total + Number(deposit.extra || 0),
-        0
-    );
+    // =========================================================
+    // FINANCIAL TOTALS
+    // ONLY APPROVED PAYMENTS ARE INCLUDED
+    // =========================================================
+
+    const totalAmount =
+        approvedDeposits.reduce(
+            (
+                total,
+                deposit
+            ) =>
+                total +
+                Number(
+                    deposit.amount ||
+                    0
+                ),
+            0
+        );
+
+    const totalFine =
+        approvedDeposits.reduce(
+            (
+                total,
+                deposit
+            ) =>
+                total +
+                Number(
+                    deposit.fine ||
+                    0
+                ),
+            0
+        );
+
+    const totalExtra =
+        approvedDeposits.reduce(
+            (
+                total,
+                deposit
+            ) =>
+                total +
+                Number(
+                    deposit.extra ||
+                    0
+                ),
+            0
+        );
 
     const grandTotal =
         totalAmount +
@@ -450,24 +1110,26 @@ function Deposits() {
     if (loading) {
         return (
             <div className="page">
+
                 <div className="page-header">
+
                     <div>
-                        <h1>Deposits</h1>
+
+                        <h1>
+                            {isAdmin
+                                ? "Deposits"
+                                : "My Deposits"}
+                        </h1>
 
                         <p>
-                            Manage member deposits and
-                            payments.
+                            Loading
+                            deposits...
                         </p>
+
                     </div>
+
                 </div>
 
-                <div className="content-card">
-                    <div className="empty-state">
-                        <p>
-                            Loading deposits...
-                        </p>
-                    </div>
-                </div>
             </div>
         );
     }
@@ -479,24 +1141,35 @@ function Deposits() {
     return (
         <div className="page deposits-page">
 
-            {/* PAGE HEADER */}
+            {/* =================================================
+                PAGE HEADER
+            ================================================= */}
 
             <div className="page-header">
 
                 <div>
-                    <h1>Deposits</h1>
+
+                    <h1>
+                        {isAdmin
+                            ? "Deposits"
+                            : "My Deposits"}
+                    </h1>
 
                     <p>
-                        Manage member deposits and
-                        payment records.
+                        {isAdmin
+                            ? "Manage member deposits and payment records."
+                            : "View and submit your payment records."}
                     </p>
+
                 </div>
 
                 {!showForm && (
                     <button
                         type="button"
                         className="primary-button"
-                        onClick={openAddForm}
+                        onClick={
+                            openAddForm
+                        }
                     >
                         + Add Deposit
                     </button>
@@ -504,8 +1177,19 @@ function Deposits() {
 
             </div>
 
+            {/* =================================================
+                PAY NOW LOADING
+            ================================================= */}
 
-            {/* MESSAGES */}
+            {loadingDuePayment && (
+                <div className="success-message">
+                    Preparing your payment...
+                </div>
+            )}
+
+            {/* =================================================
+                MESSAGES
+            ================================================= */}
 
             {message && (
                 <div className="success-message">
@@ -519,8 +1203,9 @@ function Deposits() {
                 </div>
             )}
 
-
-            {/* SUMMARY CARDS */}
+            {/* =================================================
+                SUMMARY CARDS
+            ================================================= */}
 
             <div className="deposit-summary-grid">
 
@@ -538,6 +1223,7 @@ function Deposits() {
                             strokeLinecap="round"
                             strokeLinejoin="round"
                         >
+
                             <rect
                                 x="4"
                                 y="3"
@@ -547,10 +1233,9 @@ function Deposits() {
                             />
 
                             <path d="M8 7h8" />
-
                             <path d="M8 11h8" />
-
                             <path d="M8 15h4" />
+
                         </svg>
 
                     </div>
@@ -562,17 +1247,18 @@ function Deposits() {
                         </span>
 
                         <strong>
-                            {deposits.length}
+                            {
+                                approvedDeposits.length
+                            }
                         </strong>
 
                         <small>
-                            Payment records
+                            Approved payments
                         </small>
 
                     </div>
 
                 </div>
-
 
                 {/* Total Amount */}
 
@@ -588,15 +1274,17 @@ function Deposits() {
                             strokeLinecap="round"
                             strokeLinejoin="round"
                         >
+
                             <circle
                                 cx="12"
                                 cy="12"
                                 r="9"
                             />
 
-                            <path d="M12 6v12" />
+                            <path d="M12 7v10" />
 
-                            <path d="M15 9.5c0-1-1.2-1.8-3-1.8s-3 .8-3 1.8 1.2 1.6 3 2.1 3 1 3 2.1-1.2 1.8-3 1.8-3-.8-3-1.8" />
+                            <path d="M15 9.5c0-1-1.3-1.5-3-1.5s-3 .5-3 1.5 1 1.5 3 2 3 1 3 2-1.3 1.5-3 1.5-3-.5-3-1.5" />
+
                         </svg>
 
                     </div>
@@ -608,17 +1296,18 @@ function Deposits() {
                         </span>
 
                         <strong>
-                            {totalAmount.toFixed(2)}
+                            {totalAmount.toFixed(
+                                2
+                            )}
                         </strong>
 
                         <small>
-                            Deposit amount
+                            Approved amount
                         </small>
 
                     </div>
 
                 </div>
-
 
                 {/* Total Fine */}
 
@@ -634,15 +1323,13 @@ function Deposits() {
                             strokeLinecap="round"
                             strokeLinejoin="round"
                         >
-                            <circle
-                                cx="12"
-                                cy="12"
-                                r="9"
-                            />
 
-                            <path d="M12 7v5" />
+                            <path d="M12 3l9 17H3L12 3z" />
 
-                            <path d="M12 16h.01" />
+                            <path d="M12 9v5" />
+
+                            <path d="M12 17h.01" />
+
                         </svg>
 
                     </div>
@@ -654,17 +1341,18 @@ function Deposits() {
                         </span>
 
                         <strong>
-                            {totalFine.toFixed(2)}
+                            {totalFine.toFixed(
+                                2
+                            )}
                         </strong>
 
                         <small>
-                            Collected fines
+                            Approved fines
                         </small>
 
                     </div>
 
                 </div>
-
 
                 {/* Grand Total */}
 
@@ -680,27 +1368,20 @@ function Deposits() {
                             strokeLinecap="round"
                             strokeLinejoin="round"
                         >
+
                             <rect
-                                x="5"
-                                y="2"
-                                width="14"
-                                height="20"
+                                x="4"
+                                y="3"
+                                width="16"
+                                height="18"
                                 rx="2"
                             />
 
-                            <path d="M8 6h8" />
+                            <path d="M8 7h8" />
+                            <path d="M8 11h8" />
+                            <path d="M8 15h2" />
+                            <path d="M12 15h4" />
 
-                            <path d="M8 10h2" />
-
-                            <path d="M14 10h2" />
-
-                            <path d="M8 14h2" />
-
-                            <path d="M14 14h2" />
-
-                            <path d="M8 18h2" />
-
-                            <path d="M14 18h2" />
                         </svg>
 
                     </div>
@@ -712,11 +1393,13 @@ function Deposits() {
                         </span>
 
                         <strong>
-                            {grandTotal.toFixed(2)}
+                            {grandTotal.toFixed(
+                                2
+                            )}
                         </strong>
 
                         <small>
-                            Total collected
+                            Approved total
                         </small>
 
                     </div>
@@ -725,8 +1408,9 @@ function Deposits() {
 
             </div>
 
-
-            {/* ADD / EDIT FORM */}
+            {/* =================================================
+                ADD / EDIT FORM
+            ================================================= */}
 
             {showForm && (
                 <div className="content-card">
@@ -744,7 +1428,9 @@ function Deposits() {
                             <p>
                                 {editingId
                                     ? "Update the payment record."
-                                    : "Enter the payment information below."}
+                                    : isAdmin
+                                    ? "Enter the payment information below."
+                                    : "Submit a payment for admin approval."}
                             </p>
 
                         </div>
@@ -752,15 +1438,20 @@ function Deposits() {
                         <button
                             type="button"
                             className="secondary-button"
-                            onClick={resetForm}
+                            onClick={
+                                resetForm
+                            }
                         >
                             Close Form
                         </button>
 
                     </div>
 
-
-                    <form onSubmit={handleSubmit}>
+                    <form
+                        onSubmit={
+                            handleSubmit
+                        }
+                    >
 
                         <div className="form-grid">
 
@@ -775,9 +1466,16 @@ function Deposits() {
                                 <select
                                     id="deposit-member"
                                     name="member"
-                                    value={formData.member}
-                                    onChange={handleChange}
+                                    value={
+                                        formData.member
+                                    }
+                                    onChange={
+                                        handleChange
+                                    }
                                     required
+                                    disabled={
+                                        !isAdmin
+                                    }
                                 >
 
                                     <option value="">
@@ -785,13 +1483,23 @@ function Deposits() {
                                     </option>
 
                                     {members.map(
-                                        (member) => (
+                                        (
+                                            member
+                                        ) => (
                                             <option
-                                                key={member.id}
-                                                value={member.id}
+                                                key={
+                                                    member.id
+                                                }
+                                                value={
+                                                    member.id
+                                                }
                                             >
-                                                {member.first_name}{" "}
-                                                {member.last_name}
+                                                {
+                                                    member.first_name
+                                                }{" "}
+                                                {
+                                                    member.last_name
+                                                }
                                             </option>
                                         )
                                     )}
@@ -799,7 +1507,6 @@ function Deposits() {
                                 </select>
 
                             </div>
-
 
                             {/* YEAR */}
 
@@ -813,15 +1520,18 @@ function Deposits() {
                                     id="deposit-year"
                                     type="number"
                                     name="year"
-                                    value={formData.year}
-                                    onChange={handleChange}
+                                    value={
+                                        formData.year
+                                    }
+                                    onChange={
+                                        handleChange
+                                    }
                                     min="2000"
                                     max="2100"
                                     required
                                 />
 
                             </div>
-
 
                             {/* MONTH */}
 
@@ -834,8 +1544,12 @@ function Deposits() {
                                 <select
                                     id="deposit-month"
                                     name="month"
-                                    value={formData.month}
-                                    onChange={handleChange}
+                                    value={
+                                        formData.month
+                                    }
+                                    onChange={
+                                        handleChange
+                                    }
                                     required
                                 >
 
@@ -844,12 +1558,20 @@ function Deposits() {
                                     </option>
 
                                     {MONTHS.map(
-                                        (month) => (
+                                        (
+                                            month
+                                        ) => (
                                             <option
-                                                key={month}
-                                                value={month}
+                                                key={
+                                                    month
+                                                }
+                                                value={
+                                                    month
+                                                }
                                             >
-                                                {month}
+                                                {
+                                                    month
+                                                }
                                             </option>
                                         )
                                     )}
@@ -858,28 +1580,28 @@ function Deposits() {
 
                             </div>
 
-
                             {/* PAYMENT DATE */}
 
                             <div className="form-group">
 
-                                <label htmlFor="payment-date">
+                                <label htmlFor="deposit-payment-date">
                                     Payment Date
                                 </label>
 
                                 <input
-                                    id="payment-date"
+                                    id="deposit-payment-date"
                                     type="date"
                                     name="payment_date"
                                     value={
                                         formData.payment_date
                                     }
-                                    onChange={handleChange}
+                                    onChange={
+                                        handleChange
+                                    }
                                     required
                                 />
 
                             </div>
-
 
                             {/* AMOUNT */}
 
@@ -893,8 +1615,12 @@ function Deposits() {
                                     id="deposit-amount"
                                     type="number"
                                     name="amount"
-                                    value={formData.amount}
-                                    onChange={handleChange}
+                                    value={
+                                        formData.amount
+                                    }
+                                    onChange={
+                                        handleChange
+                                    }
                                     placeholder="2500.00"
                                     min="0"
                                     step="0.01"
@@ -902,7 +1628,6 @@ function Deposits() {
                                 />
 
                             </div>
-
 
                             {/* FINE */}
 
@@ -916,15 +1641,18 @@ function Deposits() {
                                     id="deposit-fine"
                                     type="number"
                                     name="fine"
-                                    value={formData.fine}
-                                    onChange={handleChange}
+                                    value={
+                                        formData.fine
+                                    }
+                                    onChange={
+                                        handleChange
+                                    }
                                     placeholder="0.00"
                                     min="0"
                                     step="0.01"
                                 />
 
                             </div>
-
 
                             {/* EXTRA */}
 
@@ -938,15 +1666,18 @@ function Deposits() {
                                     id="deposit-extra"
                                     type="number"
                                     name="extra"
-                                    value={formData.extra}
-                                    onChange={handleChange}
+                                    value={
+                                        formData.extra
+                                    }
+                                    onChange={
+                                        handleChange
+                                    }
                                     placeholder="0.00"
                                     min="0"
                                     step="0.01"
                                 />
 
                             </div>
-
 
                             {/* REMARKS */}
 
@@ -960,15 +1691,18 @@ function Deposits() {
                                     id="deposit-remarks"
                                     name="remarks"
                                     rows="4"
-                                    value={formData.remarks}
-                                    onChange={handleChange}
+                                    value={
+                                        formData.remarks
+                                    }
+                                    onChange={
+                                        handleChange
+                                    }
                                     placeholder="Optional remarks..."
                                 />
 
                             </div>
 
                         </div>
-
 
                         {/* FORM ACTIONS */}
 
@@ -977,19 +1711,28 @@ function Deposits() {
                             <button
                                 type="submit"
                                 className="primary-button"
-                                disabled={saving}
+                                disabled={
+                                    saving
+                                }
                             >
                                 {saving
                                     ? "Saving..."
                                     : editingId
                                     ? "Update Deposit"
-                                    : "Add Deposit"}
+                                    : isAdmin
+                                    ? "Add Deposit"
+                                    : "Submit Payment"}
                             </button>
 
                             <button
                                 type="button"
                                 className="secondary-button"
-                                onClick={resetForm}
+                                onClick={
+                                    resetForm
+                                }
+                                disabled={
+                                    saving
+                                }
                             >
                                 Cancel
                             </button>
@@ -1001,8 +1744,9 @@ function Deposits() {
                 </div>
             )}
 
-
-            {/* DEPOSIT LIST */}
+            {/* =================================================
+                DEPOSIT LIST
+            ================================================= */}
 
             <div className="content-card">
 
@@ -1011,23 +1755,30 @@ function Deposits() {
                     <div>
 
                         <h2>
-                            Deposit List
+                            {isAdmin
+                                ? "Deposit List"
+                                : "My Payment History"}
                         </h2>
 
                         <p>
-                            {deposits.length} payment
-                            record
-                            {deposits.length !== 1
-                                ? "s"
-                                : ""}
+                            {
+                                deposits.length
+                            }{" "}
+                            payment
+                            {
+                                deposits.length !==
+                                1
+                                    ? "s"
+                                    : ""
+                            }
                         </p>
 
                     </div>
 
                 </div>
 
-
-                {deposits.length === 0 ? (
+                {deposits.length ===
+                0 ? (
 
                     <div className="empty-state">
 
@@ -1053,45 +1804,73 @@ function Deposits() {
 
                                 <tr>
 
-                                    <th>ID</th>
+                                    <th>
+                                        ID
+                                    </th>
 
-                                    <th>Member</th>
+                                    <th>
+                                        Member
+                                    </th>
 
-                                    <th>Year</th>
+                                    <th>
+                                        Year
+                                    </th>
 
-                                    <th>Month</th>
+                                    <th>
+                                        Month
+                                    </th>
 
-                                    <th>Amount</th>
+                                    <th>
+                                        Amount
+                                    </th>
 
-                                    <th>Fine</th>
+                                    <th>
+                                        Fine
+                                    </th>
 
-                                    <th>Extra</th>
+                                    <th>
+                                        Extra
+                                    </th>
 
-                                    <th>Total</th>
+                                    <th>
+                                        Total
+                                    </th>
 
-                                    <th>Payment Date</th>
+                                    <th>
+                                        Payment Date
+                                    </th>
 
-                                    <th>Actions</th>
+                                    <th>
+                                        Status
+                                    </th>
+
+                                    <th>
+                                        Actions
+                                    </th>
 
                                 </tr>
 
                             </thead>
 
-
                             <tbody>
 
                                 {deposits.map(
-                                    (deposit) => {
+                                    (
+                                        deposit
+                                    ) => {
 
                                         const total =
                                             Number(
-                                                deposit.amount || 0
+                                                deposit.amount ||
+                                                0
                                             ) +
                                             Number(
-                                                deposit.fine || 0
+                                                deposit.fine ||
+                                                0
                                             ) +
                                             Number(
-                                                deposit.extra || 0
+                                                deposit.extra ||
+                                                0
                                             );
 
                                         return (
@@ -1107,21 +1886,17 @@ function Deposits() {
                                                     }
                                                 </td>
 
-
                                                 <td>
 
                                                     <div className="member-name">
-
                                                         {
                                                             getMemberName(
                                                                 deposit
                                                             )
                                                         }
-
                                                     </div>
 
                                                 </td>
-
 
                                                 <td>
                                                     {
@@ -1129,56 +1904,52 @@ function Deposits() {
                                                     }
                                                 </td>
 
-
                                                 <td>
 
                                                     <span className="role-badge">
-
                                                         {
                                                             normalizeMonth(
                                                                 deposit.month
                                                             )
                                                         }
-
                                                     </span>
 
                                                 </td>
-
 
                                                 <td>
                                                     {Number(
                                                         deposit.amount ||
                                                         0
-                                                    ).toFixed(2)}
+                                                    ).toFixed(
+                                                        2
+                                                    )}
                                                 </td>
-
 
                                                 <td>
                                                     {Number(
                                                         deposit.fine ||
                                                         0
-                                                    ).toFixed(2)}
+                                                    ).toFixed(
+                                                        2
+                                                    )}
                                                 </td>
-
 
                                                 <td>
                                                     {Number(
                                                         deposit.extra ||
                                                         0
-                                                    ).toFixed(2)}
+                                                    ).toFixed(
+                                                        2
+                                                    )}
                                                 </td>
 
-
                                                 <td>
-
                                                     <strong>
                                                         {total.toFixed(
                                                             2
                                                         )}
                                                     </strong>
-
                                                 </td>
-
 
                                                 <td>
                                                     {
@@ -1187,34 +1958,96 @@ function Deposits() {
                                                     }
                                                 </td>
 
+                                                <td>
+
+                                                    <span
+                                                        className={getStatusClass(
+                                                            deposit.status
+                                                        )}
+                                                    >
+                                                        {getStatusLabel(
+                                                            deposit.status
+                                                        )}
+                                                    </span>
+
+                                                </td>
 
                                                 <td>
 
                                                     <div className="table-actions">
 
-                                                        <button
-                                                            type="button"
-                                                            className="table-button"
-                                                            onClick={() =>
-                                                                handleEdit(
-                                                                    deposit
-                                                                )
-                                                            }
-                                                        >
-                                                            Edit
-                                                        </button>
+                                                        {isAdmin ? (
 
-                                                        <button
-                                                            type="button"
-                                                            className="table-button table-button-danger"
-                                                            onClick={() =>
-                                                                handleDelete(
-                                                                    deposit.id
-                                                                )
-                                                            }
-                                                        >
-                                                            Delete
-                                                        </button>
+                                                            deposit.status ===
+                                                            "PENDING" ? (
+                                                                <>
+
+                                                                    <button
+                                                                        type="button"
+                                                                        className="table-button"
+                                                                        onClick={() =>
+                                                                            handleStatusChange(
+                                                                                deposit.id,
+                                                                                "APPROVED"
+                                                                            )
+                                                                        }
+                                                                    >
+                                                                        Approve
+                                                                    </button>
+
+                                                                    <button
+                                                                        type="button"
+                                                                        className="table-button table-button-danger"
+                                                                        onClick={() =>
+                                                                            handleStatusChange(
+                                                                                deposit.id,
+                                                                                "REJECTED"
+                                                                            )
+                                                                        }
+                                                                    >
+                                                                        Reject
+                                                                    </button>
+
+                                                                </>
+                                                            ) : (
+
+                                                                <>
+
+                                                                    <button
+                                                                        type="button"
+                                                                        className="table-button"
+                                                                        onClick={() =>
+                                                                            handleEdit(
+                                                                                deposit
+                                                                            )
+                                                                        }
+                                                                    >
+                                                                        Edit
+                                                                    </button>
+
+                                                                    <button
+                                                                        type="button"
+                                                                        className="table-button table-button-danger"
+                                                                        onClick={() =>
+                                                                            handleDelete(
+                                                                                deposit.id
+                                                                            )
+                                                                        }
+                                                                    >
+                                                                        Delete
+                                                                    </button>
+
+                                                                </>
+
+                                                            )
+
+                                                        ) : (
+
+                                                            <span className="table-muted">
+                                                                View only
+                                                            </span>
+
+                                                        )}
 
                                                     </div>
 
