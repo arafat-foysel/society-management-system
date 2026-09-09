@@ -1,3 +1,4 @@
+
 """
 Django settings for society_backend project.
 
@@ -45,6 +46,7 @@ INSTALLED_APPS = [
     'accounts',
     'members',
     'deposits',
+    'contributions',
     'corsheaders',
 ]
 

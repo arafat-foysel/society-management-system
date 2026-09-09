@@ -1,3 +1,4 @@
+from django.conf import settings
 from django.db import models
 
 
@@ -15,6 +16,14 @@ class Member(models.Model):
         ("Active", "Active"),
         ("Inactive", "Inactive"),
     ]
+
+    user = models.OneToOneField(
+        settings.AUTH_USER_MODEL,
+        on_delete=models.SET_NULL,
+        related_name="member_profile",
+        null=True,
+        blank=True,
+    )
 
     first_name = models.CharField(
         max_length=100

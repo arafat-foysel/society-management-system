@@ -56,6 +56,16 @@ class Deposit(models.Model):
         null=True
     )
 
+    status = models.CharField(
+        max_length=10,
+        choices=[
+            ("PENDING", "Pending"),
+            ("APPROVED", "Approved"),
+            ("REJECTED", "Rejected"),
+        ],
+        default="APPROVED",
+    )
+
     created_at = models.DateTimeField(
         auto_now_add=True
     )
