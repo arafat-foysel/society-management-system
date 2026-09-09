@@ -91,6 +91,37 @@ function DepositsIcon() {
 }
 
 
+function ContributionIcon() {
+
+    return (
+
+        <svg
+            viewBox="0 0 24 24"
+            fill="none"
+            stroke="currentColor"
+            strokeWidth="1.8"
+            strokeLinecap="round"
+            strokeLinejoin="round"
+            aria-hidden="true"
+        >
+
+            <path d="M4 19h16" />
+
+            <path d="M6 16V8" />
+
+            <path d="M10 16V5" />
+
+            <path d="M14 16v-6" />
+
+            <path d="M18 16V7" />
+
+        </svg>
+
+    );
+
+}
+
+
 function LogoutIcon() {
 
     return (
@@ -178,7 +209,6 @@ function Sidebar() {
 
     const handleLogout = () => {
 
-        // Remove JWT tokens
         localStorage.removeItem(
             "access_token"
         );
@@ -187,7 +217,6 @@ function Sidebar() {
             "refresh_token"
         );
 
-        // Redirect to login page
         navigate("/login");
 
     };
@@ -313,6 +342,37 @@ function Sidebar() {
                     </span>
 
                 </NavLink>
+
+
+                {/* =================================================
+                    CONTRIBUTION RATES
+                    ADMIN ONLY
+                ================================================= */}
+
+                {!loadingUser && isAdmin && (
+
+                    <NavLink
+                        to="/contributions"
+                        className={({ isActive }) =>
+                            isActive
+                                ? "active"
+                                : ""
+                        }
+                    >
+
+                        <span className="sidebar-icon">
+
+                            <ContributionIcon />
+
+                        </span>
+
+                        <span>
+                            Contribution Rates
+                        </span>
+
+                    </NavLink>
+
+                )}
 
             </nav>
 

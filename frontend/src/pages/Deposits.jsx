@@ -6,6 +6,7 @@ import {
 import { apiFetch } from "../services/api";
 import { getCurrentUser } from "../services/auth";
 
+
 const MONTHS = [
     "January",
     "February",
@@ -21,7 +22,9 @@ const MONTHS = [
     "December",
 ];
 
+
 const normalizeMonth = (month) => {
+
     if (!month) {
         return "";
     }
@@ -48,7 +51,9 @@ const normalizeMonth = (month) => {
     return monthMap[numericMonth] || value;
 };
 
+
 const getTodayDate = () => {
+
     const today = new Date();
 
     const year =
@@ -67,6 +72,7 @@ const getTodayDate = () => {
     return `${year}-${month}-${day}`;
 };
 
+
 const getEmptyForm = () => ({
     member: "",
     year: new Date().getFullYear(),
@@ -78,8 +84,11 @@ const getEmptyForm = () => ({
     remarks: "",
 });
 
+
 const getStatusClass = (status) => {
+
     switch (status) {
+
         case "APPROVED":
             return "status-badge status-approved";
 
@@ -94,8 +103,11 @@ const getStatusClass = (status) => {
     }
 };
 
+
 const getStatusLabel = (status) => {
+
     switch (status) {
+
         case "APPROVED":
             return "Approved";
 
@@ -110,14 +122,66 @@ const getStatusLabel = (status) => {
     }
 };
 
+
+const getOverviewStatusClass = (status) => {
+
+    switch (status) {
+
+        case "PAID":
+            return "status-badge status-approved";
+
+        case "PENDING":
+            return "status-badge status-pending";
+
+        case "PARTIAL":
+            return "status-badge status-pending";
+
+        case "DUE":
+            return "status-badge status-rejected";
+
+        default:
+            return "status-badge";
+    }
+};
+
+
+const getOverviewStatusLabel = (status) => {
+
+    switch (status) {
+
+        case "PAID":
+            return "Paid";
+
+        case "PENDING":
+            return "Pending";
+
+        case "PARTIAL":
+            return "Partial";
+
+        case "DUE":
+            return "Due";
+
+        default:
+            return status || "Unknown";
+    }
+};
+
+
 function Deposits() {
+
     const [searchParams, setSearchParams] =
         useSearchParams();
 
-    const [members, setMembers] = useState([]);
-    const [deposits, setDeposits] = useState([]);
+
+    const [members, setMembers] =
+        useState([]);
+
+    const [deposits, setDeposits] =
+        useState([]);
+
     const [currentUser, setCurrentUser] =
         useState(null);
+
 
     const [loading, setLoading] =
         useState(true);
@@ -145,22 +209,52 @@ function Deposits() {
             getEmptyForm()
         );
 
+
+    // =========================================================
+    // MONTHLY PAYMENT OVERVIEW
+    // ADMIN ONLY
+    // =========================================================
+
+    const [overviewYear, setOverviewYear] =
+        useState(
+            new Date().getFullYear()
+        );
+
+    const [overviewMonth, setOverviewMonth] =
+        useState(
+            new Date().getMonth() + 1
+        );
+
+    const [overview, setOverview] =
+        useState(null);
+
+    const [loadingOverview, setLoadingOverview] =
+        useState(false);
+
+    const [overviewError, setOverviewError] =
+        useState("");
+
+
     const isAdmin =
         currentUser?.system_role ===
         "ADMIN";
+
 
     // =========================================================
     // LOAD MEMBERS
     // =========================================================
 
     const loadMembers = async () => {
+
         try {
+
             const response =
                 await apiFetch(
                     "/members/"
                 );
 
             if (!response.ok) {
+
                 const data =
                     await response.json().catch(
                         () => ({})
@@ -182,6 +276,7 @@ function Deposits() {
             );
 
         } catch (err) {
+
             console.error(
                 "Error loading members:",
                 err
@@ -194,18 +289,22 @@ function Deposits() {
         }
     };
 
+
     // =========================================================
     // LOAD DEPOSITS
     // =========================================================
 
     const loadDeposits = async () => {
+
         try {
+
             const response =
                 await apiFetch(
                     "/deposits/"
                 );
 
             if (!response.ok) {
+
                 const data =
                     await response.json().catch(
                         () => ({})
@@ -227,6 +326,7 @@ function Deposits() {
             );
 
         } catch (err) {
+
             console.error(
                 "Error loading deposits:",
                 err
@@ -238,22 +338,27 @@ function Deposits() {
             );
 
         } finally {
+
             setLoading(false);
         }
     };
+
 
     // =========================================================
     // LOAD CURRENT USER
     // =========================================================
 
     const loadCurrentUser = async () => {
+
         try {
+
             const user =
                 await getCurrentUser();
 
             setCurrentUser(user);
 
         } catch (err) {
+
             console.error(
                 "Error loading current user:",
                 err
@@ -265,21 +370,106 @@ function Deposits() {
         }
     };
 
+
+    // =========================================================
+    // LOAD MONTHLY PAYMENT OVERVIEW
+    // =========================================================
+
+    const loadMonthlyOverview = async (
+        year = overviewYear,
+        month = overviewMonth
+    ) => {
+
+        if (!isAdmin) {
+            return;
+        }
+
+        try {
+
+            setLoadingOverview(true);
+            setOverviewError("");
+
+            const response =
+                await apiFetch(
+                    `/deposits/monthly-overview/?year=${year}&month=${month}`
+                );
+
+            const data =
+                await response
+                    .json()
+                    .catch(
+                        () => ({})
+                    );
+
+            if (!response.ok) {
+
+                throw new Error(
+                    data.detail ||
+                    "Failed to load monthly payment overview."
+                );
+            }
+
+            setOverview(data);
+
+        } catch (err) {
+
+            console.error(
+                "Error loading monthly overview:",
+                err
+            );
+
+            setOverviewError(
+                err.message ||
+                "Failed to load monthly payment overview."
+            );
+
+            setOverview(null);
+
+        } finally {
+
+            setLoadingOverview(false);
+        }
+    };
+
+
     // =========================================================
     // INITIAL LOAD
     // =========================================================
 
     useEffect(() => {
+
         loadMembers();
+
         loadDeposits();
+
         loadCurrentUser();
+
     }, []);
+
+
+    // =========================================================
+    // LOAD OVERVIEW AFTER ADMIN USER IS KNOWN
+    // =========================================================
+
+    useEffect(() => {
+
+        if (!isAdmin) {
+            return;
+        }
+
+        loadMonthlyOverview();
+
+    }, [
+        isAdmin,
+    ]);
+
 
     // =========================================================
     // AUTOMATICALLY SELECT USER'S OWN MEMBER
     // =========================================================
 
     useEffect(() => {
+
         if (
             isAdmin ||
             !currentUser ||
@@ -300,6 +490,7 @@ function Deposits() {
             ownMember &&
             !formData.member
         ) {
+
             setFormData(
                 (previous) => ({
                     ...previous,
@@ -309,6 +500,7 @@ function Deposits() {
                 })
             );
         }
+
     }, [
         currentUser,
         members,
@@ -317,14 +509,13 @@ function Deposits() {
         formData.member,
     ]);
 
+
     // =========================================================
     // PAY NOW
-    //
-    // Expected URL:
-    // /deposits?pay_year=2026&pay_month=September
     // =========================================================
 
     useEffect(() => {
+
         const payYear =
             searchParams.get(
                 "pay_year"
@@ -347,7 +538,9 @@ function Deposits() {
 
         const openDuePayment =
             async () => {
+
                 try {
+
                     setLoadingDuePayment(
                         true
                     );
@@ -361,6 +554,7 @@ function Deposits() {
                         );
 
                     if (!response.ok) {
+
                         const data =
                             await response
                                 .json()
@@ -401,6 +595,7 @@ function Deposits() {
                         );
 
                     if (!duePayment) {
+
                         throw new Error(
                             `${normalizedMonth} ${payYear} is no longer due.`
                         );
@@ -410,6 +605,7 @@ function Deposits() {
                         duePayment.status !==
                         "DUE"
                     ) {
+
                         throw new Error(
                             `${normalizedMonth} ${payYear} is currently ${duePayment.status.toLowerCase()}.`
                         );
@@ -437,6 +633,7 @@ function Deposits() {
                         members[0];
 
                     if (!ownMember) {
+
                         throw new Error(
                             "Your member account could not be found."
                         );
@@ -445,9 +642,11 @@ function Deposits() {
                     setEditingId(null);
 
                     setFormData({
-                        member: String(
-                            ownMember.id
-                        ),
+
+                        member:
+                            String(
+                                ownMember.id
+                            ),
 
                         year:
                             Number(
@@ -479,9 +678,6 @@ function Deposits() {
 
                     setShowForm(true);
 
-                    // Remove the Pay Now query
-                    // so a browser refresh does
-                    // not reopen the form.
                     setSearchParams(
                         {},
                         {
@@ -495,6 +691,7 @@ function Deposits() {
                     });
 
                 } catch (err) {
+
                     console.error(
                         "Error opening due payment:",
                         err
@@ -513,6 +710,7 @@ function Deposits() {
                     );
 
                 } finally {
+
                     setLoadingDuePayment(
                         false
                     );
@@ -529,6 +727,7 @@ function Deposits() {
         setSearchParams,
     ]);
 
+
     // =========================================================
     // INPUT CHANGE
     // =========================================================
@@ -536,6 +735,7 @@ function Deposits() {
     const handleChange = (
         event
     ) => {
+
         const {
             name,
             value,
@@ -549,11 +749,13 @@ function Deposits() {
         );
     };
 
+
     // =========================================================
     // OPEN ADD FORM
     // =========================================================
 
     const openAddForm = () => {
+
         setEditingId(null);
 
         const ownMember =
@@ -564,6 +766,7 @@ function Deposits() {
             ) || members[0];
 
         setFormData({
+
             ...getEmptyForm(),
 
             member:
@@ -585,11 +788,13 @@ function Deposits() {
         });
     };
 
+
     // =========================================================
     // RESET / CLOSE FORM
     // =========================================================
 
     const resetForm = () => {
+
         setFormData(
             getEmptyForm()
         );
@@ -602,6 +807,7 @@ function Deposits() {
         setShowForm(false);
     };
 
+
     // =========================================================
     // CREATE / UPDATE
     // =========================================================
@@ -609,43 +815,54 @@ function Deposits() {
     const handleSubmit = async (
         event
     ) => {
+
         event.preventDefault();
 
         setMessage("");
         setError("");
 
         if (!formData.member) {
+
             setError(
                 "Please select a member."
             );
+
             return;
         }
 
         if (!formData.year) {
+
             setError(
                 "Please enter the year."
             );
+
             return;
         }
 
         if (!formData.month) {
+
             setError(
                 "Please select a month."
             );
+
             return;
         }
 
         if (!formData.amount) {
+
             setError(
                 "Please enter the amount."
             );
+
             return;
         }
 
         if (!formData.payment_date) {
+
             setError(
                 "Please select the payment date."
             );
+
             return;
         }
 
@@ -665,17 +882,21 @@ function Deposits() {
             ).replace(",", ".");
 
         const payload = {
-            member: Number(
-                formData.member
-            ),
 
-            year: Number(
-                formData.year
-            ),
+            member:
+                Number(
+                    formData.member
+                ),
 
-            month: normalizeMonth(
-                formData.month
-            ),
+            year:
+                Number(
+                    formData.year
+                ),
+
+            month:
+                normalizeMonth(
+                    formData.month
+                ),
 
             amount,
 
@@ -691,28 +912,29 @@ function Deposits() {
         };
 
         try {
+
             setSaving(true);
 
             let response;
 
             // =================================================
             // UPDATE EXISTING DEPOSIT
-            // ADMIN ONLY
             // =================================================
 
             if (editingId) {
+
                 response =
                     await apiFetch(
                         `/deposits/${editingId}/`,
                         {
                             method: "PUT",
-
                             body:
                                 JSON.stringify(
                                     payload
                                 ),
                         }
                     );
+
             }
 
             // =================================================
@@ -720,12 +942,12 @@ function Deposits() {
             // =================================================
 
             else {
+
                 response =
                     await apiFetch(
                         "/deposits/",
                         {
                             method: "POST",
-
                             body:
                                 JSON.stringify(
                                     payload
@@ -742,6 +964,7 @@ function Deposits() {
                     );
 
             if (!response.ok) {
+
                 console.error(
                     "Django error:",
                     data
@@ -754,16 +977,19 @@ function Deposits() {
             }
 
             if (editingId) {
+
                 setMessage(
                     "Deposit updated successfully!"
                 );
 
             } else if (isAdmin) {
+
                 setMessage(
                     "Deposit added successfully!"
                 );
 
             } else {
+
                 setMessage(
                     "Payment submitted successfully! Waiting for admin approval."
                 );
@@ -779,7 +1005,13 @@ function Deposits() {
 
             await loadDeposits();
 
+            if (isAdmin) {
+
+                await loadMonthlyOverview();
+            }
+
         } catch (err) {
+
             console.error(
                 "Error saving deposit:",
                 err
@@ -790,18 +1022,20 @@ function Deposits() {
             );
 
         } finally {
+
             setSaving(false);
         }
     };
 
+
     // =========================================================
     // EDIT DEPOSIT
-    // ADMIN ONLY
     // =========================================================
 
     const handleEdit = (
         deposit
     ) => {
+
         if (!isAdmin) {
             return;
         }
@@ -811,15 +1045,19 @@ function Deposits() {
         );
 
         setFormData({
-            member: String(
-                deposit.member
-            ),
 
-            year: deposit.year,
+            member:
+                String(
+                    deposit.member
+                ),
 
-            month: normalizeMonth(
-                deposit.month
-            ),
+            year:
+                deposit.year,
+
+            month:
+                normalizeMonth(
+                    deposit.month
+                ),
 
             amount:
                 deposit.amount ??
@@ -853,14 +1091,15 @@ function Deposits() {
         });
     };
 
+
     // =========================================================
     // DELETE DEPOSIT
-    // ADMIN ONLY
     // =========================================================
 
     const handleDelete = async (
         id
     ) => {
+
         if (!isAdmin) {
             return;
         }
@@ -875,6 +1114,7 @@ function Deposits() {
         }
 
         try {
+
             setError("");
             setMessage("");
 
@@ -887,12 +1127,16 @@ function Deposits() {
                 );
 
             if (!response.ok) {
+
                 let data = {};
 
                 try {
+
                     data =
                         await response.json();
+
                 } catch {
+
                     data = {};
                 }
 
@@ -908,7 +1152,10 @@ function Deposits() {
 
             await loadDeposits();
 
+            await loadMonthlyOverview();
+
         } catch (err) {
+
             console.error(
                 "Error deleting deposit:",
                 err
@@ -920,9 +1167,9 @@ function Deposits() {
         }
     };
 
+
     // =========================================================
     // APPROVE / REJECT PAYMENT
-    // ADMIN ONLY
     // =========================================================
 
     const handleStatusChange =
@@ -930,6 +1177,7 @@ function Deposits() {
             id,
             status
         ) => {
+
             if (!isAdmin) {
                 return;
             }
@@ -949,6 +1197,7 @@ function Deposits() {
             }
 
             try {
+
                 setError("");
                 setMessage("");
 
@@ -975,6 +1224,7 @@ function Deposits() {
                         );
 
                 if (!response.ok) {
+
                     throw new Error(
                         data.detail ||
                         JSON.stringify(
@@ -992,7 +1242,10 @@ function Deposits() {
 
                 await loadDeposits();
 
+                await loadMonthlyOverview();
+
             } catch (err) {
+
                 console.error(
                     "Error changing deposit status:",
                     err
@@ -1004,6 +1257,7 @@ function Deposits() {
             }
         };
 
+
     // =========================================================
     // MEMBER NAME
     // =========================================================
@@ -1011,6 +1265,7 @@ function Deposits() {
     const getMemberName = (
         deposit
     ) => {
+
         if (deposit.member_name) {
             return deposit.member_name;
         }
@@ -1027,11 +1282,30 @@ function Deposits() {
             );
 
         if (member) {
+
             return `${member.first_name} ${member.last_name}`;
         }
 
         return `Member #${deposit.member}`;
     };
+
+
+    // =========================================================
+    // OVERVIEW FILTER
+    // =========================================================
+
+    const handleOverviewLoad = async () => {
+
+        await loadMonthlyOverview(
+            Number(
+                overviewYear
+            ),
+            Number(
+                overviewMonth
+            )
+        );
+    };
+
 
     // =========================================================
     // APPROVED / PENDING PAYMENTS
@@ -1051,9 +1325,9 @@ function Deposits() {
                 "PENDING"
         );
 
+
     // =========================================================
     // FINANCIAL TOTALS
-    // ONLY APPROVED PAYMENTS ARE INCLUDED
     // =========================================================
 
     const totalAmount =
@@ -1103,11 +1377,13 @@ function Deposits() {
         totalFine +
         totalExtra;
 
+
     // =========================================================
     // LOADING
     // =========================================================
 
     if (loading) {
+
         return (
             <div className="page">
 
@@ -1134,11 +1410,13 @@ function Deposits() {
         );
     }
 
+
     // =========================================================
     // UI
     // =========================================================
 
     return (
+
         <div className="page deposits-page">
 
             {/* =================================================
@@ -1164,6 +1442,7 @@ function Deposits() {
                 </div>
 
                 {!showForm && (
+
                     <button
                         type="button"
                         className="primary-button"
@@ -1173,38 +1452,569 @@ function Deposits() {
                     >
                         + Add Deposit
                     </button>
+
                 )}
 
             </div>
+
 
             {/* =================================================
                 PAY NOW LOADING
             ================================================= */}
 
             {loadingDuePayment && (
+
                 <div className="success-message">
                     Preparing your payment...
                 </div>
+
             )}
+
 
             {/* =================================================
                 MESSAGES
             ================================================= */}
 
             {message && (
+
                 <div className="success-message">
                     {message}
                 </div>
+
             )}
 
             {error && (
+
                 <div className="error-message">
                     {error}
                 </div>
+
             )}
 
+
             {/* =================================================
-                SUMMARY CARDS
+                ADMIN MONTHLY PAYMENT OVERVIEW
+            ================================================= */}
+
+            {isAdmin && (
+
+                <div className="content-card">
+
+                    <div className="card-header">
+
+                        <div>
+
+                            <h2>
+                                Monthly Payment Overview
+                            </h2>
+
+                            <p>
+                                Check the payment status of every member for a selected month.
+                            </p>
+
+                        </div>
+
+                    </div>
+
+
+                    {/* FILTERS */}
+
+                    <div className="filters">
+
+                        <div className="filter-group">
+
+                            <label htmlFor="overview-year">
+                                Year
+                            </label>
+
+                            <select
+                                id="overview-year"
+                                value={
+                                    overviewYear
+                                }
+                                onChange={(
+                                    event
+                                ) =>
+                                    setOverviewYear(
+                                        event.target.value
+                                    )
+                                }
+                            >
+
+                                {Array.from(
+                                    {
+                                        length: 10,
+                                    },
+                                    (
+                                        _,
+                                        index
+                                    ) =>
+                                        new Date().getFullYear() -
+                                        index
+                                ).map(
+                                    (
+                                        year
+                                    ) => (
+
+                                        <option
+                                            key={
+                                                year
+                                            }
+                                            value={
+                                                year
+                                            }
+                                        >
+                                            {
+                                                year
+                                            }
+                                        </option>
+
+                                    )
+                                )}
+
+                            </select>
+
+                        </div>
+
+
+                        <div className="filter-group">
+
+                            <label htmlFor="overview-month">
+                                Month
+                            </label>
+
+                            <select
+                                id="overview-month"
+                                value={
+                                    overviewMonth
+                                }
+                                onChange={(
+                                    event
+                                ) =>
+                                    setOverviewMonth(
+                                        event.target.value
+                                    )
+                                }
+                            >
+
+                                {MONTHS.map(
+                                    (
+                                        month,
+                                        index
+                                    ) => (
+
+                                        <option
+                                            key={
+                                                month
+                                            }
+                                            value={
+                                                index + 1
+                                            }
+                                        >
+                                            {
+                                                month
+                                            }
+                                        </option>
+
+                                    )
+                                )}
+
+                            </select>
+
+                        </div>
+
+
+                        <div className="filter-action">
+
+                            <button
+                                type="button"
+                                className="primary-button"
+                                onClick={
+                                    handleOverviewLoad
+                                }
+                                disabled={
+                                    loadingOverview
+                                }
+                            >
+                                {loadingOverview
+                                    ? "Loading..."
+                                    : "Load Overview"}
+                            </button>
+
+                        </div>
+
+                    </div>
+
+
+                    {/* OVERVIEW ERROR */}
+
+                    {overviewError && (
+
+                        <div className="login-error">
+                            {overviewError}
+                        </div>
+
+                    )}
+
+
+                    {/* OVERVIEW */}
+
+                    {loadingOverview && !overview && (
+
+                        <div
+                            style={{
+                                padding: "35px 20px",
+                                textAlign: "center",
+                                color: "#64748b",
+                            }}
+                        >
+                            Loading monthly payment overview...
+                        </div>
+
+                    )}
+
+
+                    {overview && (
+
+                        <>
+
+                            {/* MONTH HEADER */}
+
+                            <div
+                                style={{
+                                    display: "flex",
+                                    alignItems: "center",
+                                    justifyContent: "space-between",
+                                    gap: "20px",
+                                    marginBottom: "20px",
+                                    padding: "18px 20px",
+                                    background: "#f8fafc",
+                                    border: "1px solid #e2e8f0",
+                                    borderRadius: "10px",
+                                }}
+                            >
+
+                                <div>
+
+                                    <div
+                                        style={{
+                                            color: "#334155",
+                                            fontSize: "16px",
+                                            fontWeight: "700",
+                                        }}
+                                    >
+                                        {overview.month_name}{" "}
+                                        {overview.year}
+                                    </div>
+
+                                    <div
+                                        style={{
+                                            marginTop: "4px",
+                                            color: "#64748b",
+                                            fontSize: "13px",
+                                        }}
+                                    >
+                                        Expected contribution per member
+                                    </div>
+
+                                </div>
+
+                                <strong
+                                    style={{
+                                        color: "#1e293b",
+                                        fontSize: "22px",
+                                        whiteSpace: "nowrap",
+                                    }}
+                                >
+                                    {overview.expected_amount !==
+                                    null
+                                        ? `€ ${Number(
+                                              overview.expected_amount
+                                          ).toLocaleString(
+                                              "de-DE",
+                                              {
+                                                  minimumFractionDigits: 2,
+                                                  maximumFractionDigits: 2,
+                                              }
+                                          )}`
+                                        : "No rate"}
+                                </strong>
+
+                            </div>
+
+
+                            {/* OVERVIEW SUMMARY */}
+
+                            <div className="deposit-summary-grid">
+
+                                <div className="deposit-summary-card">
+
+                                    <span>
+                                        Total Members
+                                    </span>
+
+                                    <strong>
+                                        {
+                                            overview.summary
+                                                .total_members
+                                        }
+                                    </strong>
+
+                                    <small>
+                                        Members in society
+                                    </small>
+
+                                </div>
+
+
+                                <div className="deposit-summary-card">
+
+                                    <span>
+                                        Paid
+                                    </span>
+
+                                    <strong>
+                                        {
+                                            overview.summary
+                                                .paid
+                                        }
+                                    </strong>
+
+                                    <small>
+                                        Fully paid
+                                    </small>
+
+                                </div>
+
+
+                                <div className="deposit-summary-card">
+
+                                    <span>
+                                        Pending
+                                    </span>
+
+                                    <strong>
+                                        {
+                                            overview.summary
+                                                .pending
+                                        }
+                                    </strong>
+
+                                    <small>
+                                        Awaiting approval
+                                    </small>
+
+                                </div>
+
+
+                                <div className="deposit-summary-card">
+
+                                    <span>
+                                        Due
+                                    </span>
+
+                                    <strong>
+                                        {
+                                            overview.summary
+                                                .due
+                                        }
+                                    </strong>
+
+                                    <small>
+                                        No payment received
+                                    </small>
+
+                                </div>
+
+                            </div>
+
+
+                            {/* PARTIAL NOTICE */}
+
+                            {overview.summary.partial >
+                                0 && (
+
+                                <div
+                                    style={{
+                                        marginBottom: "18px",
+                                        padding: "12px 14px",
+                                        border: "1px solid #fed7aa",
+                                        borderRadius: "8px",
+                                        background: "#fff7ed",
+                                        color: "#c2410c",
+                                        fontSize: "13px",
+                                        fontWeight: "600",
+                                    }}
+                                >
+                                    {
+                                        overview.summary
+                                            .partial
+                                    }{" "}
+                                    member
+                                    {
+                                        overview.summary
+                                            .partial !==
+                                        1
+                                            ? "s have"
+                                            : " has"
+                                    }{" "}
+                                    a partial payment.
+                                </div>
+
+                            )}
+
+
+                            {/* MEMBER PAYMENT TABLE */}
+
+                            <div className="table-wrapper">
+
+                                <table className="data-table">
+
+                                    <thead>
+
+                                        <tr>
+
+                                            <th>
+                                                Member
+                                            </th>
+
+                                            <th>
+                                                Expected
+                                            </th>
+
+                                            <th>
+                                                Paid
+                                            </th>
+
+                                            <th>
+                                                Pending
+                                            </th>
+
+                                            <th>
+                                                Remaining
+                                            </th>
+
+                                            <th>
+                                                Status
+                                            </th>
+
+                                        </tr>
+
+                                    </thead>
+
+                                    <tbody>
+
+                                        {overview.members.map(
+                                            (
+                                                member
+                                            ) => (
+
+                                                <tr
+                                                    key={
+                                                        member.member_id
+                                                    }
+                                                >
+
+                                                    <td>
+
+                                                        <div className="member-name">
+                                                            {
+                                                                member.member_name
+                                                            }
+                                                        </div>
+
+                                                    </td>
+
+                                                    <td>
+                                                        €{" "}
+                                                        {Number(
+                                                            member.expected_amount
+                                                        ).toLocaleString(
+                                                            "de-DE",
+                                                            {
+                                                                minimumFractionDigits: 2,
+                                                                maximumFractionDigits: 2,
+                                                            }
+                                                        )}
+                                                    </td>
+
+                                                    <td>
+                                                        €{" "}
+                                                        {Number(
+                                                            member.paid_amount
+                                                        ).toLocaleString(
+                                                            "de-DE",
+                                                            {
+                                                                minimumFractionDigits: 2,
+                                                                maximumFractionDigits: 2,
+                                                            }
+                                                        )}
+                                                    </td>
+
+                                                    <td>
+                                                        €{" "}
+                                                        {Number(
+                                                            member.pending_amount
+                                                        ).toLocaleString(
+                                                            "de-DE",
+                                                            {
+                                                                minimumFractionDigits: 2,
+                                                                maximumFractionDigits: 2,
+                                                            }
+                                                        )}
+                                                    </td>
+
+                                                    <td>
+                                                        €{" "}
+                                                        {Number(
+                                                            member.remaining_amount
+                                                        ).toLocaleString(
+                                                            "de-DE",
+                                                            {
+                                                                minimumFractionDigits: 2,
+                                                                maximumFractionDigits: 2,
+                                                            }
+                                                        )}
+                                                    </td>
+
+                                                    <td>
+
+                                                        <span
+                                                            className={getOverviewStatusClass(
+                                                                member.status
+                                                            )}
+                                                        >
+                                                            {
+                                                                getOverviewStatusLabel(
+                                                                    member.status
+                                                                )
+                                                            }
+                                                        </span>
+
+                                                    </td>
+
+                                                </tr>
+
+                                            )
+                                        )}
+
+                                    </tbody>
+
+                                </table>
+
+                            </div>
+
+                        </>
+
+                    )}
+
+                </div>
+
+            )}
+
+
+            {/* =================================================
+                EXISTING SUMMARY CARDS
             ================================================= */}
 
             <div className="deposit-summary-grid">
@@ -1260,6 +2070,7 @@ function Deposits() {
 
                 </div>
 
+
                 {/* Total Amount */}
 
                 <div className="deposit-summary-card deposit-summary-card-with-icon">
@@ -1309,6 +2120,7 @@ function Deposits() {
 
                 </div>
 
+
                 {/* Total Fine */}
 
                 <div className="deposit-summary-card deposit-summary-card-with-icon">
@@ -1353,6 +2165,7 @@ function Deposits() {
                     </div>
 
                 </div>
+
 
                 {/* Grand Total */}
 
@@ -1408,11 +2221,13 @@ function Deposits() {
 
             </div>
 
+
             {/* =================================================
                 ADD / EDIT FORM
             ================================================= */}
 
             {showForm && (
+
                 <div className="content-card">
 
                     <div className="card-header">
@@ -1446,6 +2261,7 @@ function Deposits() {
                         </button>
 
                     </div>
+
 
                     <form
                         onSubmit={
@@ -1486,6 +2302,7 @@ function Deposits() {
                                         (
                                             member
                                         ) => (
+
                                             <option
                                                 key={
                                                     member.id
@@ -1501,12 +2318,14 @@ function Deposits() {
                                                     member.last_name
                                                 }
                                             </option>
+
                                         )
                                     )}
 
                                 </select>
 
                             </div>
+
 
                             {/* YEAR */}
 
@@ -1532,6 +2351,7 @@ function Deposits() {
                                 />
 
                             </div>
+
 
                             {/* MONTH */}
 
@@ -1561,6 +2381,7 @@ function Deposits() {
                                         (
                                             month
                                         ) => (
+
                                             <option
                                                 key={
                                                     month
@@ -1573,12 +2394,14 @@ function Deposits() {
                                                     month
                                                 }
                                             </option>
+
                                         )
                                     )}
 
                                 </select>
 
                             </div>
+
 
                             {/* PAYMENT DATE */}
 
@@ -1602,6 +2425,7 @@ function Deposits() {
                                 />
 
                             </div>
+
 
                             {/* AMOUNT */}
 
@@ -1629,6 +2453,7 @@ function Deposits() {
 
                             </div>
 
+
                             {/* FINE */}
 
                             <div className="form-group">
@@ -1653,6 +2478,7 @@ function Deposits() {
                                 />
 
                             </div>
+
 
                             {/* EXTRA */}
 
@@ -1679,6 +2505,7 @@ function Deposits() {
 
                             </div>
 
+
                             {/* REMARKS */}
 
                             <div className="form-group form-group-full">
@@ -1703,6 +2530,7 @@ function Deposits() {
                             </div>
 
                         </div>
+
 
                         {/* FORM ACTIONS */}
 
@@ -1742,7 +2570,9 @@ function Deposits() {
                     </form>
 
                 </div>
+
             )}
+
 
             {/* =================================================
                 DEPOSIT LIST
@@ -1776,6 +2606,7 @@ function Deposits() {
                     </div>
 
                 </div>
+
 
                 {deposits.length ===
                 0 ? (
@@ -1852,6 +2683,7 @@ function Deposits() {
 
                             </thead>
 
+
                             <tbody>
 
                                 {deposits.map(
@@ -1874,6 +2706,7 @@ function Deposits() {
                                             );
 
                                         return (
+
                                             <tr
                                                 key={
                                                     deposit.id
@@ -1944,11 +2777,13 @@ function Deposits() {
                                                 </td>
 
                                                 <td>
+
                                                     <strong>
                                                         {total.toFixed(
                                                             2
                                                         )}
                                                     </strong>
+
                                                 </td>
 
                                                 <td>
@@ -1980,6 +2815,7 @@ function Deposits() {
 
                                                             deposit.status ===
                                                             "PENDING" ? (
+
                                                                 <>
 
                                                                     <button
@@ -2009,6 +2845,7 @@ function Deposits() {
                                                                     </button>
 
                                                                 </>
+
                                                             ) : (
 
                                                                 <>
@@ -2054,6 +2891,7 @@ function Deposits() {
                                                 </td>
 
                                             </tr>
+
                                         );
                                     }
                                 )}
@@ -2071,5 +2909,6 @@ function Deposits() {
         </div>
     );
 }
+
 
 export default Deposits;
