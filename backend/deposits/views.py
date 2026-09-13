@@ -1,35 +1,27 @@
 from rest_framework import generics
-
 from rest_framework.response import Response
-
 from rest_framework.views import APIView
-
 from rest_framework.permissions import IsAuthenticated
-
 from rest_framework.exceptions import PermissionDenied
 
 from django.db.models import Sum
 
 from accounts.permissions import IsSystemAdmin
-
 from members.models import Member
 
 from .models import Deposit
-
 from .serializers import DepositSerializer
-
 from .services import (
+    get_admin_payment_analytics,
     get_due_payments_for_member,
     get_monthly_payment_overview,
 )
 
 
 class DepositListCreateAPIView(generics.ListCreateAPIView):
-
     serializer_class = DepositSerializer
 
     def get_queryset(self):
-
         user = self.request.user
 
         if (
@@ -43,22 +35,18 @@ class DepositListCreateAPIView(generics.ListCreateAPIView):
         )
 
     def get_permissions(self):
-
         return [IsAuthenticated()]
 
     def perform_create(self, serializer):
-
         user = self.request.user
 
         if (
             user.system_role == "ADMIN"
             or user.is_superuser
         ):
-
             serializer.save(
                 status="APPROVED"
             )
-
             return
 
         member_id = self.request.data.get(
@@ -71,7 +59,6 @@ class DepositListCreateAPIView(generics.ListCreateAPIView):
         ).first()
 
         if not member:
-
             raise PermissionDenied(
                 "You can only submit payments for your own member account."
             )
@@ -85,18 +72,15 @@ class DepositListCreateAPIView(generics.ListCreateAPIView):
 class DepositRetrieveUpdateDestroyAPIView(
     generics.RetrieveUpdateDestroyAPIView
 ):
-
     serializer_class = DepositSerializer
 
     def get_queryset(self):
-
         user = self.request.user
 
         if (
             user.system_role == "ADMIN"
             or user.is_superuser
         ):
-
             return Deposit.objects.all()
 
         return Deposit.objects.filter(
@@ -104,9 +88,7 @@ class DepositRetrieveUpdateDestroyAPIView(
         )
 
     def get_permissions(self):
-
         if self.request.method == "GET":
-
             return [IsAuthenticated()]
 
         return [
@@ -116,11 +98,9 @@ class DepositRetrieveUpdateDestroyAPIView(
 
 
 class DepositSummaryAPIView(APIView):
-
     permission_classes = [IsAuthenticated]
 
     def get(self, request):
-
         user = request.user
 
         system_totals = Deposit.objects.filter(
@@ -176,20 +156,14 @@ class DepositSummaryAPIView(APIView):
         )
 
         return Response({
-
             "system_grand_total": system_grand_total,
-
             "my_total_submitted": my_total_submitted,
-
             "my_approved_total": my_approved_total,
-
             "my_pending_count": my_pending.count(),
-
         })
 
 
 class DepositDuePaymentsAPIView(APIView):
-
     """
     Return due and pending monthly payments
     for the currently authenticated member.
@@ -198,7 +172,6 @@ class DepositDuePaymentsAPIView(APIView):
     permission_classes = [IsAuthenticated]
 
     def get(self, request):
-
         user = request.user
 
         member = Member.objects.filter(
@@ -206,15 +179,10 @@ class DepositDuePaymentsAPIView(APIView):
         ).first()
 
         if not member:
-
             return Response({
-
                 "member": None,
-
                 "due_count": 0,
-
                 "due_payments": [],
-
             })
 
         due_payments = get_due_payments_for_member(
@@ -222,24 +190,18 @@ class DepositDuePaymentsAPIView(APIView):
         )
 
         return Response({
-
             "member": member.id,
-
             "member_name": str(member),
-
             "due_count": sum(
                 1
                 for payment in due_payments
                 if payment["status"] == "DUE"
             ),
-
             "due_payments": due_payments,
-
         })
 
 
 class DepositMonthlyPaymentOverviewAPIView(APIView):
-
     """
     Return the payment status of every member
     for a selected year and month.
@@ -253,12 +215,10 @@ class DepositMonthlyPaymentOverviewAPIView(APIView):
     ]
 
     def get(self, request):
-
         year = request.query_params.get("year")
         month = request.query_params.get("month")
 
         if not year or not month:
-
             return Response(
                 {
                     "detail": (
@@ -269,12 +229,10 @@ class DepositMonthlyPaymentOverviewAPIView(APIView):
             )
 
         try:
-
             year = int(year)
             month = int(month)
 
         except ValueError:
-
             return Response(
                 {
                     "detail": (
@@ -285,7 +243,6 @@ class DepositMonthlyPaymentOverviewAPIView(APIView):
             )
 
         if month < 1 or month > 12:
-
             return Response(
                 {
                     "detail": (
@@ -296,7 +253,6 @@ class DepositMonthlyPaymentOverviewAPIView(APIView):
             )
 
         if year < 2023:
-
             return Response(
                 {
                     "detail": (
@@ -312,3 +268,21 @@ class DepositMonthlyPaymentOverviewAPIView(APIView):
         )
 
         return Response(overview)
+
+
+class DepositAdminAnalyticsAPIView(APIView):
+    """
+    Return payment analytics for the Admin Dashboard.
+
+    Admin access only.
+    """
+
+    permission_classes = [
+        IsAuthenticated,
+        IsSystemAdmin,
+    ]
+
+    def get(self, request):
+        analytics = get_admin_payment_analytics()
+
+        return Response(analytics)

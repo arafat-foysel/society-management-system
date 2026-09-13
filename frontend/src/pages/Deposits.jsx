@@ -215,6 +215,9 @@ function Deposits() {
     // ADMIN ONLY
     // =========================================================
 
+    const [showOverview, setShowOverview] =
+        useState(false);
+
     const [overviewYear, setOverviewYear] =
         useState(
             new Date().getFullYear()
@@ -445,23 +448,6 @@ function Deposits() {
         loadCurrentUser();
 
     }, []);
-
-
-    // =========================================================
-    // LOAD OVERVIEW AFTER ADMIN USER IS KNOWN
-    // =========================================================
-
-    useEffect(() => {
-
-        if (!isAdmin) {
-            return;
-        }
-
-        loadMonthlyOverview();
-
-    }, [
-        isAdmin,
-    ]);
 
 
     // =========================================================
@@ -1005,7 +991,7 @@ function Deposits() {
 
             await loadDeposits();
 
-            if (isAdmin) {
+            if (isAdmin && showOverview) {
 
                 await loadMonthlyOverview();
             }
@@ -1152,7 +1138,10 @@ function Deposits() {
 
             await loadDeposits();
 
-            await loadMonthlyOverview();
+            if (showOverview) {
+
+                await loadMonthlyOverview();
+            }
 
         } catch (err) {
 
@@ -1242,7 +1231,10 @@ function Deposits() {
 
                 await loadDeposits();
 
-                await loadMonthlyOverview();
+                if (showOverview) {
+
+                    await loadMonthlyOverview();
+                }
 
             } catch (err) {
 
@@ -1500,509 +1492,614 @@ function Deposits() {
 
                 <div className="content-card">
 
-                    <div className="card-header">
+                    {/* =================================================
+                        COLLAPSIBLE HEADER
+                    ================================================= */}
 
-                        <div>
+                    <button
+                        type="button"
+                        onClick={() => {
 
-                            <h2>
-                                Monthly Payment Overview
-                            </h2>
+                            setShowOverview(
+                                (previous) =>
+                                    !previous
+                            );
 
-                            <p>
-                                Check the payment status of every member for a selected month.
-                            </p>
+                            setOverviewError("");
 
-                        </div>
-
-                    </div>
-
-
-                    {/* FILTERS */}
-
-                    <div className="filters">
-
-                        <div className="filter-group">
-
-                            <label htmlFor="overview-year">
-                                Year
-                            </label>
-
-                            <select
-                                id="overview-year"
-                                value={
-                                    overviewYear
-                                }
-                                onChange={(
-                                    event
-                                ) =>
-                                    setOverviewYear(
-                                        event.target.value
-                                    )
-                                }
-                            >
-
-                                {Array.from(
-                                    {
-                                        length: 10,
-                                    },
-                                    (
-                                        _,
-                                        index
-                                    ) =>
-                                        new Date().getFullYear() -
-                                        index
-                                ).map(
-                                    (
-                                        year
-                                    ) => (
-
-                                        <option
-                                            key={
-                                                year
-                                            }
-                                            value={
-                                                year
-                                            }
-                                        >
-                                            {
-                                                year
-                                            }
-                                        </option>
-
-                                    )
-                                )}
-
-                            </select>
-
-                        </div>
-
-
-                        <div className="filter-group">
-
-                            <label htmlFor="overview-month">
-                                Month
-                            </label>
-
-                            <select
-                                id="overview-month"
-                                value={
-                                    overviewMonth
-                                }
-                                onChange={(
-                                    event
-                                ) =>
-                                    setOverviewMonth(
-                                        event.target.value
-                                    )
-                                }
-                            >
-
-                                {MONTHS.map(
-                                    (
-                                        month,
-                                        index
-                                    ) => (
-
-                                        <option
-                                            key={
-                                                month
-                                            }
-                                            value={
-                                                index + 1
-                                            }
-                                        >
-                                            {
-                                                month
-                                            }
-                                        </option>
-
-                                    )
-                                )}
-
-                            </select>
-
-                        </div>
-
-
-                        <div className="filter-action">
-
-                            <button
-                                type="button"
-                                className="primary-button"
-                                onClick={
-                                    handleOverviewLoad
-                                }
-                                disabled={
-                                    loadingOverview
-                                }
-                            >
-                                {loadingOverview
-                                    ? "Loading..."
-                                    : "Load Overview"}
-                            </button>
-
-                        </div>
-
-                    </div>
-
-
-                    {/* OVERVIEW ERROR */}
-
-                    {overviewError && (
-
-                        <div className="login-error">
-                            {overviewError}
-                        </div>
-
-                    )}
-
-
-                    {/* OVERVIEW */}
-
-                    {loadingOverview && !overview && (
+                        }}
+                        style={{
+                            width: "100%",
+                            border: "none",
+                            background: "transparent",
+                            padding: 0,
+                            cursor: "pointer",
+                            textAlign: "left",
+                        }}
+                    >
 
                         <div
+                            className="card-header"
                             style={{
-                                padding: "35px 20px",
-                                textAlign: "center",
-                                color: "#64748b",
+                                marginBottom:
+                                    showOverview
+                                        ? "20px"
+                                        : "0",
                             }}
                         >
-                            Loading monthly payment overview...
-                        </div>
 
-                    )}
+                            <div>
+
+                                <h2>
+                                    Monthly Payment Overview
+                                </h2>
+
+                                <p>
+                                    {showOverview
+                                        ? "Select a month to check the payment status of every member."
+                                        : "Click to view the monthly payment statement."}
+                                </p>
+
+                            </div>
 
 
-                    {overview && (
-
-                        <>
-
-                            {/* MONTH HEADER */}
-
-                            <div
+                            <span
                                 style={{
                                     display: "flex",
                                     alignItems: "center",
-                                    justifyContent: "space-between",
-                                    gap: "20px",
-                                    marginBottom: "20px",
-                                    padding: "18px 20px",
-                                    background: "#f8fafc",
-                                    border: "1px solid #e2e8f0",
-                                    borderRadius: "10px",
+                                    justifyContent: "center",
+                                    width: "34px",
+                                    height: "34px",
+                                    borderRadius: "8px",
+                                    background: "#f1f5f9",
+                                    color: "#475569",
+                                    fontSize: "20px",
+                                    fontWeight: "700",
+                                    flexShrink: 0,
                                 }}
                             >
+                                {showOverview
+                                    ? "⌃"
+                                    : "⌄"}
+                            </span>
 
-                                <div>
+                        </div>
 
-                                    <div
-                                        style={{
-                                            color: "#334155",
-                                            fontSize: "16px",
-                                            fontWeight: "700",
+                    </button>
+
+
+                    {/* =================================================
+                        COLLAPSIBLE CONTENT
+                    ================================================= */}
+
+                    {showOverview && (
+
+                        <>
+
+                            {/* =================================================
+                                FILTERS
+                            ================================================= */}
+
+                            <div className="filters">
+
+                                <div className="filter-group">
+
+                                    <label htmlFor="overview-year">
+                                        Year
+                                    </label>
+
+                                    <select
+                                        id="overview-year"
+                                        value={
+                                            overviewYear
+                                        }
+                                        onChange={(
+                                            event
+                                        ) => {
+
+                                            setOverviewYear(
+                                                event.target.value
+                                            );
+
+                                            setOverview(
+                                                null
+                                            );
+
+                                            setOverviewError(
+                                                ""
+                                            );
+
                                         }}
                                     >
-                                        {overview.month_name}{" "}
-                                        {overview.year}
-                                    </div>
 
-                                    <div
-                                        style={{
-                                            marginTop: "4px",
-                                            color: "#64748b",
-                                            fontSize: "13px",
-                                        }}
-                                    >
-                                        Expected contribution per member
-                                    </div>
+                                        {Array.from(
+                                            {
+                                                length: 10,
+                                            },
+                                            (
+                                                _,
+                                                index
+                                            ) =>
+                                                new Date().getFullYear() -
+                                                index
+                                        ).map(
+                                            (
+                                                year
+                                            ) => (
+
+                                                <option
+                                                    key={
+                                                        year
+                                                    }
+                                                    value={
+                                                        year
+                                                    }
+                                                >
+                                                    {
+                                                        year
+                                                    }
+                                                </option>
+
+                                            )
+                                        )}
+
+                                    </select>
 
                                 </div>
 
-                                <strong
-                                    style={{
-                                        color: "#1e293b",
-                                        fontSize: "22px",
-                                        whiteSpace: "nowrap",
-                                    }}
-                                >
-                                    {overview.expected_amount !==
-                                    null
-                                        ? `€ ${Number(
-                                              overview.expected_amount
-                                          ).toLocaleString(
-                                              "de-DE",
-                                              {
-                                                  minimumFractionDigits: 2,
-                                                  maximumFractionDigits: 2,
-                                              }
-                                          )}`
-                                        : "No rate"}
-                                </strong>
+
+                                <div className="filter-group">
+
+                                    <label htmlFor="overview-month">
+                                        Month
+                                    </label>
+
+                                    <select
+                                        id="overview-month"
+                                        value={
+                                            overviewMonth
+                                        }
+                                        onChange={(
+                                            event
+                                        ) => {
+
+                                            setOverviewMonth(
+                                                event.target.value
+                                            );
+
+                                            setOverview(
+                                                null
+                                            );
+
+                                            setOverviewError(
+                                                ""
+                                            );
+
+                                        }}
+                                    >
+
+                                        {MONTHS.map(
+                                            (
+                                                month,
+                                                index
+                                            ) => (
+
+                                                <option
+                                                    key={
+                                                        month
+                                                    }
+                                                    value={
+                                                        index + 1
+                                                    }
+                                                >
+                                                    {
+                                                        month
+                                                    }
+                                                </option>
+
+                                            )
+                                        )}
+
+                                    </select>
+
+                                </div>
+
+
+                                <div className="filter-action">
+
+                                    <button
+                                        type="button"
+                                        className="primary-button"
+                                        onClick={
+                                            handleOverviewLoad
+                                        }
+                                        disabled={
+                                            loadingOverview
+                                        }
+                                    >
+                                        {loadingOverview
+                                            ? "Loading..."
+                                            : "Load Overview"}
+                                    </button>
+
+                                </div>
 
                             </div>
 
 
-                            {/* OVERVIEW SUMMARY */}
+                            {/* =================================================
+                                OVERVIEW ERROR
+                            ================================================= */}
 
-                            <div className="deposit-summary-grid">
+                            {overviewError && (
 
-                                <div className="deposit-summary-card">
-
-                                    <span>
-                                        Total Members
-                                    </span>
-
-                                    <strong>
-                                        {
-                                            overview.summary
-                                                .total_members
-                                        }
-                                    </strong>
-
-                                    <small>
-                                        Members in society
-                                    </small>
-
-                                </div>
-
-
-                                <div className="deposit-summary-card">
-
-                                    <span>
-                                        Paid
-                                    </span>
-
-                                    <strong>
-                                        {
-                                            overview.summary
-                                                .paid
-                                        }
-                                    </strong>
-
-                                    <small>
-                                        Fully paid
-                                    </small>
-
-                                </div>
-
-
-                                <div className="deposit-summary-card">
-
-                                    <span>
-                                        Pending
-                                    </span>
-
-                                    <strong>
-                                        {
-                                            overview.summary
-                                                .pending
-                                        }
-                                    </strong>
-
-                                    <small>
-                                        Awaiting approval
-                                    </small>
-
-                                </div>
-
-
-                                <div className="deposit-summary-card">
-
-                                    <span>
-                                        Due
-                                    </span>
-
-                                    <strong>
-                                        {
-                                            overview.summary
-                                                .due
-                                        }
-                                    </strong>
-
-                                    <small>
-                                        No payment received
-                                    </small>
-
-                                </div>
-
-                            </div>
-
-
-                            {/* PARTIAL NOTICE */}
-
-                            {overview.summary.partial >
-                                0 && (
-
-                                <div
-                                    style={{
-                                        marginBottom: "18px",
-                                        padding: "12px 14px",
-                                        border: "1px solid #fed7aa",
-                                        borderRadius: "8px",
-                                        background: "#fff7ed",
-                                        color: "#c2410c",
-                                        fontSize: "13px",
-                                        fontWeight: "600",
-                                    }}
-                                >
-                                    {
-                                        overview.summary
-                                            .partial
-                                    }{" "}
-                                    member
-                                    {
-                                        overview.summary
-                                            .partial !==
-                                        1
-                                            ? "s have"
-                                            : " has"
-                                    }{" "}
-                                    a partial payment.
+                                <div className="login-error">
+                                    {overviewError}
                                 </div>
 
                             )}
 
 
-                            {/* MEMBER PAYMENT TABLE */}
+                            {/* =================================================
+                                OVERVIEW LOADING
+                            ================================================= */}
 
-                            <div className="table-wrapper">
+                            {loadingOverview && !overview && (
 
-                                <table className="data-table">
+                                <div
+                                    style={{
+                                        padding: "35px 20px",
+                                        textAlign: "center",
+                                        color: "#64748b",
+                                    }}
+                                >
+                                    Loading monthly payment overview...
+                                </div>
 
-                                    <thead>
+                            )}
 
-                                        <tr>
 
-                                            <th>
-                                                Member
-                                            </th>
+                            {/* =================================================
+                                OVERVIEW
+                            ================================================= */}
 
-                                            <th>
-                                                Expected
-                                            </th>
+                            {overview && (
 
-                                            <th>
+                                <>
+
+                                    {/* MONTH HEADER */}
+
+                                    <div
+                                        style={{
+                                            display: "flex",
+                                            alignItems: "center",
+                                            justifyContent: "space-between",
+                                            gap: "20px",
+                                            marginBottom: "20px",
+                                            padding: "18px 20px",
+                                            background: "#f8fafc",
+                                            border: "1px solid #e2e8f0",
+                                            borderRadius: "10px",
+                                        }}
+                                    >
+
+                                        <div>
+
+                                            <div
+                                                style={{
+                                                    color: "#334155",
+                                                    fontSize: "16px",
+                                                    fontWeight: "700",
+                                                }}
+                                            >
+                                                {
+                                                    overview.month_name
+                                                }{" "}
+                                                {
+                                                    overview.year
+                                                }
+                                            </div>
+
+                                            <div
+                                                style={{
+                                                    marginTop: "4px",
+                                                    color: "#64748b",
+                                                    fontSize: "13px",
+                                                }}
+                                            >
+                                                Expected contribution per member
+                                            </div>
+
+                                        </div>
+
+                                        <strong
+                                            style={{
+                                                color: "#1e293b",
+                                                fontSize: "22px",
+                                                whiteSpace: "nowrap",
+                                            }}
+                                        >
+                                            {overview.expected_amount !==
+                                            null
+                                                ? `€ ${Number(
+                                                      overview.expected_amount
+                                                  ).toLocaleString(
+                                                      "de-DE",
+                                                      {
+                                                          minimumFractionDigits: 2,
+                                                          maximumFractionDigits: 2,
+                                                      }
+                                                  )}`
+                                                : "No rate"}
+                                        </strong>
+
+                                    </div>
+
+
+                                    {/* OVERVIEW SUMMARY */}
+
+                                    <div className="deposit-summary-grid">
+
+                                        <div className="deposit-summary-card">
+
+                                            <span>
+                                                Total Members
+                                            </span>
+
+                                            <strong>
+                                                {
+                                                    overview.summary
+                                                        .total_members
+                                                }
+                                            </strong>
+
+                                            <small>
+                                                Members in society
+                                            </small>
+
+                                        </div>
+
+
+                                        <div className="deposit-summary-card">
+
+                                            <span>
                                                 Paid
-                                            </th>
+                                            </span>
 
-                                            <th>
+                                            <strong>
+                                                {
+                                                    overview.summary
+                                                        .paid
+                                                }
+                                            </strong>
+
+                                            <small>
+                                                Fully paid
+                                            </small>
+
+                                        </div>
+
+
+                                        <div className="deposit-summary-card">
+
+                                            <span>
                                                 Pending
-                                            </th>
+                                            </span>
 
-                                            <th>
-                                                Remaining
-                                            </th>
+                                            <strong>
+                                                {
+                                                    overview.summary
+                                                        .pending
+                                                }
+                                            </strong>
 
-                                            <th>
-                                                Status
-                                            </th>
+                                            <small>
+                                                Awaiting approval
+                                            </small>
 
-                                        </tr>
+                                        </div>
 
-                                    </thead>
 
-                                    <tbody>
+                                        <div className="deposit-summary-card">
 
-                                        {overview.members.map(
-                                            (
-                                                member
-                                            ) => (
+                                            <span>
+                                                Due
+                                            </span>
 
-                                                <tr
-                                                    key={
-                                                        member.member_id
-                                                    }
-                                                >
+                                            <strong>
+                                                {
+                                                    overview.summary
+                                                        .due
+                                                }
+                                            </strong>
 
-                                                    <td>
+                                            <small>
+                                                No payment received
+                                            </small>
 
-                                                        <div className="member-name">
-                                                            {
-                                                                member.member_name
-                                                            }
-                                                        </div>
+                                        </div>
 
-                                                    </td>
+                                    </div>
 
-                                                    <td>
-                                                        €{" "}
-                                                        {Number(
-                                                            member.expected_amount
-                                                        ).toLocaleString(
-                                                            "de-DE",
-                                                            {
-                                                                minimumFractionDigits: 2,
-                                                                maximumFractionDigits: 2,
-                                                            }
-                                                        )}
-                                                    </td>
 
-                                                    <td>
-                                                        €{" "}
-                                                        {Number(
-                                                            member.paid_amount
-                                                        ).toLocaleString(
-                                                            "de-DE",
-                                                            {
-                                                                minimumFractionDigits: 2,
-                                                                maximumFractionDigits: 2,
-                                                            }
-                                                        )}
-                                                    </td>
+                                    {/* PARTIAL NOTICE */}
 
-                                                    <td>
-                                                        €{" "}
-                                                        {Number(
-                                                            member.pending_amount
-                                                        ).toLocaleString(
-                                                            "de-DE",
-                                                            {
-                                                                minimumFractionDigits: 2,
-                                                                maximumFractionDigits: 2,
-                                                            }
-                                                        )}
-                                                    </td>
+                                    {overview.summary.partial >
+                                        0 && (
 
-                                                    <td>
-                                                        €{" "}
-                                                        {Number(
-                                                            member.remaining_amount
-                                                        ).toLocaleString(
-                                                            "de-DE",
-                                                            {
-                                                                minimumFractionDigits: 2,
-                                                                maximumFractionDigits: 2,
-                                                            }
-                                                        )}
-                                                    </td>
+                                        <div
+                                            style={{
+                                                marginBottom: "18px",
+                                                padding: "12px 14px",
+                                                border: "1px solid #fed7aa",
+                                                borderRadius: "8px",
+                                                background: "#fff7ed",
+                                                color: "#c2410c",
+                                                fontSize: "13px",
+                                                fontWeight: "600",
+                                            }}
+                                        >
+                                            {
+                                                overview.summary
+                                                    .partial
+                                            }{" "}
+                                            member
+                                            {
+                                                overview.summary
+                                                    .partial !==
+                                                1
+                                                    ? "s have"
+                                                    : " has"
+                                            }{" "}
+                                            a partial payment.
+                                        </div>
 
-                                                    <td>
+                                    )}
 
-                                                        <span
-                                                            className={getOverviewStatusClass(
-                                                                member.status
-                                                            )}
-                                                        >
-                                                            {
-                                                                getOverviewStatusLabel(
-                                                                    member.status
-                                                                )
-                                                            }
-                                                        </span>
 
-                                                    </td>
+                                    {/* MEMBER PAYMENT TABLE */}
+
+                                    <div className="table-wrapper">
+
+                                        <table className="data-table">
+
+                                            <thead>
+
+                                                <tr>
+
+                                                    <th>
+                                                        Member
+                                                    </th>
+
+                                                    <th>
+                                                        Expected
+                                                    </th>
+
+                                                    <th>
+                                                        Paid
+                                                    </th>
+
+                                                    <th>
+                                                        Pending
+                                                    </th>
+
+                                                    <th>
+                                                        Remaining
+                                                    </th>
+
+                                                    <th>
+                                                        Status
+                                                    </th>
 
                                                 </tr>
 
-                                            )
-                                        )}
+                                            </thead>
 
-                                    </tbody>
+                                            <tbody>
 
-                                </table>
+                                                {overview.members.map(
+                                                    (
+                                                        member
+                                                    ) => (
 
-                            </div>
+                                                        <tr
+                                                            key={
+                                                                member.member_id
+                                                            }
+                                                        >
+
+                                                            <td>
+
+                                                                <div className="member-name">
+                                                                    {
+                                                                        member.member_name
+                                                                    }
+                                                                </div>
+
+                                                            </td>
+
+                                                            <td>
+                                                                €{" "}
+                                                                {Number(
+                                                                    member.expected_amount
+                                                                ).toLocaleString(
+                                                                    "de-DE",
+                                                                    {
+                                                                        minimumFractionDigits: 2,
+                                                                        maximumFractionDigits: 2,
+                                                                    }
+                                                                )}
+                                                            </td>
+
+                                                            <td>
+                                                                €{" "}
+                                                                {Number(
+                                                                    member.paid_amount
+                                                                ).toLocaleString(
+                                                                    "de-DE",
+                                                                    {
+                                                                        minimumFractionDigits: 2,
+                                                                        maximumFractionDigits: 2,
+                                                                    }
+                                                                )}
+                                                            </td>
+
+                                                            <td>
+                                                                €{" "}
+                                                                {Number(
+                                                                    member.pending_amount
+                                                                ).toLocaleString(
+                                                                    "de-DE",
+                                                                    {
+                                                                        minimumFractionDigits: 2,
+                                                                        maximumFractionDigits: 2,
+                                                                    }
+                                                                )}
+                                                            </td>
+
+                                                            <td>
+                                                                €{" "}
+                                                                {Number(
+                                                                    member.remaining_amount
+                                                                ).toLocaleString(
+                                                                    "de-DE",
+                                                                    {
+                                                                        minimumFractionDigits: 2,
+                                                                        maximumFractionDigits: 2,
+                                                                    }
+                                                                )}
+                                                            </td>
+
+                                                            <td>
+
+                                                                <span
+                                                                    className={getOverviewStatusClass(
+                                                                        member.status
+                                                                    )}
+                                                                >
+                                                                    {
+                                                                        getOverviewStatusLabel(
+                                                                            member.status
+                                                                        )
+                                                                    }
+                                                                </span>
+
+                                                            </td>
+
+                                                        </tr>
+
+                                                    )
+                                                )}
+
+                                            </tbody>
+
+                                        </table>
+
+                                    </div>
+
+                                </>
+
+                            )}
 
                         </>
 
