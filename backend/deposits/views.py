@@ -9,6 +9,12 @@ from django.db.models import Sum
 from accounts.permissions import IsSystemAdmin
 from members.models import Member
 
+from notifications.services import (
+    create_payment_submitted_notification,
+    create_payment_approved_notification,
+    create_payment_rejected_notification,
+)
+
 from .models import Deposit
 from .serializers import DepositSerializer
 from .services import (
@@ -63,9 +69,13 @@ class DepositListCreateAPIView(generics.ListCreateAPIView):
                 "You can only submit payments for your own member account."
             )
 
-        serializer.save(
+        deposit = serializer.save(
             member=member,
             status="PENDING"
+        )
+
+        create_payment_submitted_notification(
+            deposit
         )
 
 
@@ -95,6 +105,28 @@ class DepositRetrieveUpdateDestroyAPIView(
             IsAuthenticated(),
             IsSystemAdmin(),
         ]
+
+    def perform_update(self, serializer):
+        deposit = self.get_object()
+
+        old_status = deposit.status
+
+        updated_deposit = serializer.save()
+
+        new_status = updated_deposit.status
+
+        if old_status == new_status:
+            return
+
+        if new_status == "APPROVED":
+            create_payment_approved_notification(
+                updated_deposit
+            )
+
+        elif new_status == "REJECTED":
+            create_payment_rejected_notification(
+                updated_deposit
+            )
 
 
 class DepositSummaryAPIView(APIView):
